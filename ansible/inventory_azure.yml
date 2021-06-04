@@ -1,0 +1,7 @@
+plugin: azure_rm
+auth_source: cli
+include_vm_resource_groups:
+  # TODO: make dynamic
+  - ad-lab-rg #CHANGETHIS
+conditional_groups:
+  dcs: "tags.type == 'dc'"

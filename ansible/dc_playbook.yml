@@ -1,0 +1,36 @@
+---
+- name: configure domain controllers
+  hosts: dcs
+  gather_facts: no
+  vars:
+    admin_username: "{{ admin_username }}"
+    admin_password: "{{ admin_password }}"
+    safe_mode_password: "{{ admin_password }}"
+  vars_prompt:
+  - name: domain_name
+    prompt: "Domain name"
+  
+  tasks:
+    - name: make sure domain is created
+      win_domain:
+        dns_domain_name: "{{ domain_name }}"
+        safe_mode_password: "{{ safe_mode_password }}"
+      register: domain_creation
+    
+    - name: reboot if needed
+      win_reboot: {}
+      when: domain_creation.reboot_required
+
+    - name:
+      win_domain_controller:
+        dns_domain_name: "{{ domain_name }}"
+        domain_admin_user: "{{ admin_username }}@{{ domain_name }}"
+        domain_admin_password: "{{ admin_password }}"
+        safe_mode_password: "{{ safe_mode_password }}"
+        state: domain_controller
+        log_path: C:\Windows\Temp\dc_log.txt
+      register: dc_promotion
+
+    - name: reboot if needed
+      win_reboot: {}
+      when: dc_promotion.reboot_required
