@@ -4,8 +4,8 @@
   gather_facts: no
   vars:
     admin_username: "{{ admin_username }}"
-    admin_password: "{{ admin_password }}"
-    safe_mode_password: "{{ admin_password }}"
+    admin_password: "{{ ansible_winrm_password }}"
+    safe_mode_password: "{{ ansible_winrm_password }}"
   vars_prompt:
   - name: domain_name
     prompt: "Domain name"
@@ -17,11 +17,11 @@
         safe_mode_password: "{{ safe_mode_password }}"
       register: domain_creation
     
-    - name: reboot if needed
+    - name: reboot if neccassary
       win_reboot: {}
       when: domain_creation.reboot_required
 
-    - name:
+    - name: delegate to domain controller
       win_domain_controller:
         dns_domain_name: "{{ domain_name }}"
         domain_admin_user: "{{ admin_username }}@{{ domain_name }}"
@@ -31,6 +31,6 @@
         log_path: C:\Windows\Temp\dc_log.txt
       register: dc_promotion
 
-    - name: reboot if needed
+    - name: reboot if neccassary
       win_reboot: {}
       when: dc_promotion.reboot_required

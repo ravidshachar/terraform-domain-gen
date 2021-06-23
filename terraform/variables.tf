@@ -47,3 +47,8 @@ variable "domain_name" {
     type    = string
     description = "full domain name"
 }
+
+variable "workstations_count" {
+    type = number
+    default = 1
+}

@@ -1,4 +1,5 @@
 #! /bin/bash
+#
 # You can only create JIT policies from Azure Powershell or from the REST API, 
 # so to stay consistent I wrote this little hack that creates a new JIT policy using simple
 # curl requests and assuming you are currently logged on using az login.
@@ -6,7 +7,6 @@
 # $1 is the resource group name, and $2 is the wanted JIT policy name.
 
 SUB_ID=$(az account show --query "id" -o tsv) # subscription id, assumes single subscription
-#ASC_LOCATION=$(az security location list --query "[0].name" --subscription $SUB_ID -o tsv) # get azure  security center location
 RG_NAME=$1 # our resource group name
 ASC_LOCATION=$(az group show --resource-group rundeck_test --query location -o tsv) # query the location of the resource group
 POLICY_NAME=$2 # new jit policy name
@@ -19,11 +19,15 @@ do
     echo $VM_ID
     if [ "$VMS_JSON" ]
     then
-        VMS_JSON+=",{\"id\": \"$VM_ID\", \"ports\": [{\"number\": 3389, \"protocol\": \"*\", \"allowedSourceAddressPrefix\": \"*\", \"maxRequestAccessDuration\": \"PT3H\"}]}"
+        VMS_JSON+=",{\"id\": \"$VM_ID\", \"ports\": \
+        [{\"number\": 3389, \"protocol\": \"*\", \"allowedSourceAddressPrefix\": \"*\", \"maxRequestAccessDuration\": \"PT1H\"},\
+        {\"number\": 5985, \"protocol\": \"*\", \"allowedSourceAddressPrefix\": \"*\", \"maxRequestAccessDuration\": \"PT1H\"}]}"
     else
-        VMS_JSON="{\"id\": \"$VM_ID\", \"ports\": [{\"number\": 3389, \"protocol\": \"*\", \"allowedSourceAddressPrefix\": \"*\", \"maxRequestAccessDuration\": \"PT3H\"}]}"
+        VMS_JSON="{\"id\": \"$VM_ID\", \"ports\": \
+        [{\"number\": 3389, \"protocol\": \"*\", \"allowedSourceAddressPrefix\": \"*\", \"maxRequestAccessDuration\": \"PT1H\"},\
+        {\"number\": 5985, \"protocol\": \"*\", \"allowedSourceAddressPrefix\": \"*\", \"maxRequestAccessDuration\": \"PT1H\"}]}"
     fi
 done
 JSON="{\"kind\": \"Basic\", \"properties\": {\"virtualMachines\": [$VMS_JSON]}, \"id\": \"$POLICY_ID\", \"name\": \"$POLICY_NAME\", \"type\": \"Microsoft.Security/locations/jitNetworkAccessPolicies\", \"location\": \"$ASC_LOCATION\"}"
-
+#echo $JSON
 curl -X PUT -H "Authorization: Bearer $(az account get-access-token --query accessToken -o tsv)" -H "Content-Type: application/json" -d "$JSON" "https://management.azure.com${POLICY_ID}?api-version=2020-01-01"
