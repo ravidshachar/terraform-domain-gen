@@ -84,15 +84,19 @@ resource "azurerm_subnet_network_security_group_association" "dc_assoc" {
     network_security_group_id = azurerm_network_security_group.dc_nsg.id
 }
 
-resource "azurerm_virtual_machine" "dc" {
+resource "azurerm_windows_virtual_machine" "dc" {
     name                  = "${var.name_prefix}-dc"
     location              = azurerm_resource_group.resource_group.location
     resource_group_name   = azurerm_resource_group.resource_group.name
     network_interface_ids = [azurerm_network_interface.dc_nic.id]
-    vm_size               = "Standard_B2ms"
+    size               = "Standard_B2ms"
+    admin_username        = var.admin_username
+    admin_password        = var.admin_password
+    priority              = "Spot"
+    eviction_policy       = "Deallocate"
 
     # Clean Image
-    storage_image_reference {
+    source_image_reference {
         publisher = "MicrosoftWindowsServer"
         offer     = "WindowsServer"
         sku       = "2019-Datacenter"
@@ -100,23 +104,15 @@ resource "azurerm_virtual_machine" "dc" {
     }
 
     # Disk
-    delete_os_disk_on_termination = true
-    storage_os_disk {
-        name          = "${var.name_prefix}-dc-os-disk"
-        create_option = "FromImage"
+    os_disk {
+        name                 = "${var.name_prefix}-dc-os-disk"
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
     }
 
-    os_profile {
-        computer_name  = "DC01"
-        admin_username = var.admin_username
-        admin_password = var.admin_password
-    }
-
-    os_profile_windows_config {
-      # Enable WinRM for ansible
-      winrm {
-          protocol = "HTTP"
-      }
+    # Enable WinRM for ansible
+    winrm_listener {
+        protocol = "Http"
     }
 
     tags = {
@@ -126,8 +122,8 @@ resource "azurerm_virtual_machine" "dc" {
 
 resource "null_resource" "enable_jit" {
     depends_on = [
-        azurerm_virtual_machine.dc,
-        azurerm_virtual_machine.workstation
+        azurerm_windows_virtual_machine.dc,
+        azurerm_windows_virtual_machine.workstation
     ]
 
     # enable jit
@@ -143,7 +139,7 @@ resource "null_resource" "dc_playbook" {
 
     # init jit WinRM access for ansible
     provisioner "local-exec" {
-        command = "bash ../init_jit_winrm.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\" \"${azurerm_virtual_machine.dc.name}\""
+        command = "bash ../init_jit_winrm.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\" \"${azurerm_windows_virtual_machine.dc.name}\""
     }
 
     # change the dynamic ansible inventory to target the new resource group

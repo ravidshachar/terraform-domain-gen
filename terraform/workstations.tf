@@ -23,38 +23,35 @@ resource "azurerm_network_interface" "workstation_nic" {
     }
 }
 
-resource "azurerm_virtual_machine" "workstation" {
+resource "azurerm_windows_virtual_machine" "workstation" {
     count = var.workstations_count
 
     name                  = "${var.name_prefix}-workstation${count.index}"
     resource_group_name   = azurerm_resource_group.resource_group.name
     location              = azurerm_resource_group.resource_group.location
     network_interface_ids = [azurerm_network_interface.workstation_nic[count.index].id]
-    vm_size               = "Standard_B2s"
-
-    storage_image_reference {
+    size                  = "Standard_B2s"
+    admin_username        = "localadmin"
+    admin_password        = var.admin_password
+    priority              = "Spot"
+    eviction_policy       = "Deallocate"
+    
+    source_image_reference {
       publisher = "MicrosoftWindowsDesktop"
       offer     = "Windows-10"
       sku       = "20h2-pro"
       version   = "latest"
     }
 
-    delete_os_disk_on_termination = true
-    storage_os_disk {
-      name          = "workstation${count.index+1}-os-disk"
-      create_option = "FromImage"
+    os_disk {
+      name                 = "workstation${count.index+1}-os-disk"
+      caching              = "ReadWrite"
+      storage_account_type = "Standard_LRS"
     }
 
-    os_profile {
-        computer_name  = "WS${count.index + 1 <= 9 ? "0${count.index+1}" : "${count.index+1}"}"
-        admin_username = "localadmin"
-        admin_password = var.admin_password
-    }
-
-    os_profile_windows_config {
-      winrm {
-          protocol = "HTTP"
-      }
+    # Enable WinRM for ansible
+    winrm_listener {
+        protocol = "Http"
     }
 
     tags = {
@@ -64,13 +61,13 @@ resource "azurerm_virtual_machine" "workstation" {
 
 resource "null_resource" "workstation_playbook" {
     depends_on = [
-        azurerm_virtual_machine.workstation,
+        azurerm_windows_virtual_machine.workstation,
         null_resource.dc_playbook
     ]
 
     # init jit WinRM access for ansible
     provisioner "local-exec" {
-        command = "bash ../init_jit_winrm.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\" \"${join(" ", azurerm_virtual_machine.workstation[*].name)}\""
+        command = "bash ../init_jit_winrm.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\" \"${join(" ", azurerm_windows_virtual_machine.workstation[*].name)}\""
     }
 
     provisioner "local-exec" {
