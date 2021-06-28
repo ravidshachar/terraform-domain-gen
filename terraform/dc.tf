@@ -64,19 +64,19 @@ resource "azurerm_network_security_group" "dc_nsg" {
         destination_address_prefix = "*"
     }
 
-    # WinRM for ansible, only to the ip associated with the terraform client.
-    # TODO: Remove this security rule after provisioning
-    #security_rule {
-    #    name                       = "Allow WinRM"
-    #    priority                   = "1001"
-    #    direction                  = "Inbound"
-    #    access                     = "Allow"
-    #    protocol                   = "TCP"
-    #    source_port_range          = "*"
-    #    destination_port_range     = "5985"
-    #    source_address_prefix      = "${local.outgoing_ip}/32"
-    #    destination_address_prefix = "*"
-    #}
+    WinRM for ansible, only to the ip associated with the terraform client.
+    TODO: Remove this security rule after provisioning
+    security_rule {
+        name                       = "Allow WinRM"
+        priority                   = "1001"
+        direction                  = "Inbound"
+        access                     = "Allow"
+        protocol                   = "TCP"
+        source_port_range          = "*"
+        destination_port_range     = "5985"
+        source_address_prefix      = "${local.outgoing_ip}/32"
+        destination_address_prefix = "*"
+    }
 }
 
 resource "azurerm_subnet_network_security_group_association" "dc_assoc" {

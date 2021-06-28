@@ -26,7 +26,7 @@ resource "azurerm_network_interface" "workstation_nic" {
 resource "azurerm_windows_virtual_machine" "workstation" {
     count = var.workstations_count
 
-    name                  = "${var.name_prefix}-workstation${count.index}"
+    name                  = "${var.name_prefix}-ws${count.index}"
     resource_group_name   = azurerm_resource_group.resource_group.name
     location              = azurerm_resource_group.resource_group.location
     network_interface_ids = [azurerm_network_interface.workstation_nic[count.index].id]
