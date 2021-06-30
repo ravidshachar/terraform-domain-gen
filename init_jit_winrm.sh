@@ -6,7 +6,7 @@
 
 SUB_ID=$(az account show --query "id" -o tsv) # subscription id, assumes single subscription
 RG_NAME=$1 # our resource group name
-ASC_LOCATION=$(az group show --resource-group rundeck_test --query location -o tsv) # query the location of the resource group
+ASC_LOCATION=$(az group show --resource-group $RG_NAME --query location -o tsv) # query the location of the resource group
 POLICY_NAME=$2 # new jit policy name
 VIRTUAL_MACHINES=$(az vm list --resource-group $RG_NAME --query "[].id" -o tsv) # lists all vms in resource group to apply the policy
 POLICY_ID="/subscriptions/$SUB_ID/resourceGroups/$RG_NAME/providers/Microsoft.Security/locations/$ASC_LOCATION/jitNetworkAccessPolicies/$POLICY_NAME" # new policy id
