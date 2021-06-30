@@ -33,8 +33,6 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     size                  = "Standard_B2s"
     admin_username        = "localadmin"
     admin_password        = var.admin_password
-    priority              = "Spot"
-    eviction_policy       = "Deallocate"
     
     source_image_reference {
       publisher = "MicrosoftWindowsDesktop"

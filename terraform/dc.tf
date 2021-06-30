@@ -64,8 +64,8 @@ resource "azurerm_network_security_group" "dc_nsg" {
         destination_address_prefix = "*"
     }
 
-    WinRM for ansible, only to the ip associated with the terraform client.
-    TODO: Remove this security rule after provisioning
+    # WinRM for ansible, only to the ip associated with the terraform client.
+    # TODO: Remove this security rule after provisioning
     security_rule {
         name                       = "Allow WinRM"
         priority                   = "1001"
@@ -92,8 +92,6 @@ resource "azurerm_windows_virtual_machine" "dc" {
     size               = "Standard_B2ms"
     admin_username        = var.admin_username
     admin_password        = var.admin_password
-    priority              = "Spot"
-    eviction_policy       = "Deallocate"
 
     # Clean Image
     source_image_reference {
