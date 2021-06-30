@@ -1,13 +1,11 @@
 ---
 - name: Configure workstations
   hosts: workstations
-  vars_prompt:
-  - name: admin_username
-    prompt: "Domain admin username"
-  - name: admin_password
-    prompt: "Domain admin password"
-  - name: domain_name
-    prompt: "Domain name"
+  vars:
+    admin_username: "{{ admin_username }}"
+    admin_password: "{{ ansible_winrm_password }}"
+    safe_mode_password: "{{ ansible_winrm_password }}"
+    domain_name: "{{ domain_name }}"
 
   tasks:
     - name: Set DC as DNS

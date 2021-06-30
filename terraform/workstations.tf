@@ -1,6 +1,6 @@
 # public ip for the first workstation
 resource "azurerm_public_ip" "workstation_ip" {
-    name                = "workstation1-public-ip"
+    name                = "${var.name_prefix}ws1-public-ip"
     location            = azurerm_resource_group.resource_group.location
     resource_group_name = azurerm_resource_group.resource_group.name
     allocation_method   = "Dynamic"
@@ -10,7 +10,7 @@ resource "azurerm_public_ip" "workstation_ip" {
 resource "azurerm_network_interface" "workstation_nic" {
     count = var.workstations_count
 
-    name                = "${var.name_prefix}-workstation${count.index+1}-nic"
+    name                = "${var.name_prefix}-ws${count.index+1}-nic"
     location            = azurerm_resource_group.resource_group.location
     resource_group_name = azurerm_resource_group.resource_group.name
 
@@ -26,7 +26,7 @@ resource "azurerm_network_interface" "workstation_nic" {
 resource "azurerm_windows_virtual_machine" "workstation" {
     count = var.workstations_count
 
-    name                  = "${var.name_prefix}-ws${count.index}"
+    name                  = "${var.name_prefix}-ws${count.index+1}"
     resource_group_name   = azurerm_resource_group.resource_group.name
     location              = azurerm_resource_group.resource_group.location
     network_interface_ids = [azurerm_network_interface.workstation_nic[count.index].id]
@@ -42,7 +42,7 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     }
 
     os_disk {
-      name                 = "workstation${count.index+1}-os-disk"
+      name                 = "${var.name_prefix}-ws${count.index+1}-os-disk"
       caching              = "ReadWrite"
       storage_account_type = "Standard_LRS"
     }
@@ -58,6 +58,8 @@ resource "azurerm_windows_virtual_machine" "workstation" {
 }
 
 resource "null_resource" "workstation_playbook" {
+
+    # let it run only after workstations are provisioned and the domain is ready
     depends_on = [
         azurerm_windows_virtual_machine.workstation,
         null_resource.dc_playbook
@@ -73,6 +75,6 @@ resource "null_resource" "workstation_playbook" {
     }
 
     provisioner "local-exec" {
-        command = "ansible-playbook ../ansible/workstations.yml --inventory ../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
+        command = "ansible-playbook ../ansible/workstations_playbook.yml --inventory ../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=${var.admin_password} -e domain_name=${var.domain_name}"
     }
 }

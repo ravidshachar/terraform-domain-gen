@@ -157,6 +157,6 @@ resource "null_resource" "dc_playbook" {
     # run the ansible playbook to configure the DC
     # TODO: This exposes the password to the machine running tf/ansible. might want to set this up using env vars
     provisioner "local-exec" {
-        command = "ansible-playbook ../ansible/dc_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
+        command = "ansible-playbook ../ansible/dc_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=${var.admin_password} -e domain_name=${var.domain_name}"
     }
 }
