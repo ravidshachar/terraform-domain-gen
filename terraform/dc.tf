@@ -44,14 +44,12 @@ resource "azurerm_network_interface" "dc_nic" {
 }
 
 # DC NSG
-# TODO: enable JIT, maybe using local-exec provisioner and azure powershell
 resource "azurerm_network_security_group" "dc_nsg" {
     name                = "${var.name_prefix}-dc-nsg"
     location            = azurerm_resource_group.resource_group.location
     resource_group_name = azurerm_resource_group.resource_group.name
 
     # RDP, currently allows all, should enable JIT
-    # TODO: Enable JIT
     security_rule {
         name                       = "Allow RDP"
         priority                   = "1000"
@@ -65,7 +63,6 @@ resource "azurerm_network_security_group" "dc_nsg" {
     }
 
     # WinRM for ansible, only to the ip associated with the terraform client.
-    # TODO: Remove this security rule after provisioning
     security_rule {
         name                       = "Allow WinRM"
         priority                   = "1001"
@@ -118,10 +115,18 @@ resource "azurerm_windows_virtual_machine" "dc" {
     }
 }
 
-resource "null_resource" "enable_jit" {
-    depends_on = [
+resource "time_sleep" "wait_for_vm_creation" {
+  depends_on = [
         azurerm_windows_virtual_machine.dc,
         azurerm_windows_virtual_machine.workstation
+    ]
+
+  create_duration = "10s"
+}
+
+resource "null_resource" "enable_jit" {
+    depends_on = [
+        time_sleep.wait_for_vm_creation
     ]
 
     # enable jit
@@ -130,33 +135,37 @@ resource "null_resource" "enable_jit" {
     }
 }
 
-resource "null_resource" "dc_playbook" {
+resource "null_resource" "init_jit_dc" {
     depends_on = [
-        null_resource.enable_jit,
+        null_resource.enable_jit
     ]
 
     # init jit WinRM access for ansible
     provisioner "local-exec" {
-        command = "bash ../init_jit_winrm.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\" \"${azurerm_windows_virtual_machine.dc.name}\""
+        command = "bash ../init_jit_winrm.sh ${azurerm_resource_group.resource_group.name} ${var.name_prefix}-jit ${azurerm_windows_virtual_machine.dc.name}"
     }
+}
+
+resource "null_resource" "dc_playbook" {
+    depends_on = [
+        azurerm_windows_virtual_machine.dc,
+        azurerm_windows_virtual_machine.workstation,
+        null_resource.init_jit_dc
+    ]
 
     # change the dynamic ansible inventory to target the new resource group
     provisioner "local-exec" {
         command = "sed s/\"- .*#CHANGETHIS\"/\"- ${azurerm_resource_group.resource_group.name} #CHANGETHIS\"/ ../ansible/inventory_azure_rm.yml"
     }
 
-    # set admin password env var so we can see the ansible output
+    # enter the password to a local file so we can use it without suppressing output
     provisioner "local-exec" {
-        command = "ADMIN_PASSWORD='${var.admin_password}'"
-    }
-
-    provisioner "local-exec" {
-        command = "echo $ADMIN_PASSWORD"
+        command = "echo ${var.admin_password} > .secret"
     }
 
     # run the ansible playbook to configure the DC
-    # TODO: This exposes the password to the machine running tf/ansible. might want to set this up using env vars
+    # setup the password from a file so we can see the output properly
     provisioner "local-exec" {
-        command = "ansible-playbook ../ansible/dc_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=${var.admin_password} -e domain_name=${var.domain_name}"
+        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ../ansible/dc_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
     }
 }

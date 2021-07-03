@@ -1,6 +1,7 @@
 ---
 - name: Configure workstations
   hosts: workstations
+  gather_facts: no
   vars:
     admin_username: "{{ admin_username }}"
     admin_password: "{{ ansible_winrm_password }}"
@@ -8,6 +9,10 @@
     domain_name: "{{ domain_name }}"
 
   tasks:
+    - name: wait 30 seconds for connection
+      wait_for_connection:
+        timeout: 30
+    
     - name: Set DC as DNS
       win_dns_client:
         adapter_names: "*"
@@ -16,7 +21,6 @@
     - name: Join workstation to domain
       win_domain_membership:
         dns_domain_name: "{{ domain_name }}"
-        hostname: "{{ ansible_env.COMPUTERNAME }}"
         domain_admin_user: "{{ admin_username }}@{{ domain_name }}"
         domain_admin_password: "{{ admin_password }}"
         state: domain

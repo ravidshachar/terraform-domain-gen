@@ -1,7 +1,7 @@
 plugin: azure_rm
 auth_source: cli
 include_vm_resource_groups:
-  # TODO: make dynamic
+  # the CHANGETHIS tag is used to replace the resource group name dynamically
   - ad-lab-rg #CHANGETHIS
 conditional_groups:
   dcs: "tags.type == 'dc'"

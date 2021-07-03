@@ -29,5 +29,4 @@ do
     fi
 done
 JSON="{\"kind\": \"Basic\", \"properties\": {\"virtualMachines\": [$VMS_JSON]}, \"id\": \"$POLICY_ID\", \"name\": \"$POLICY_NAME\", \"type\": \"Microsoft.Security/locations/jitNetworkAccessPolicies\", \"location\": \"$ASC_LOCATION\"}"
-#echo $JSON
 curl -X PUT -H "Authorization: Bearer $(az account get-access-token --query accessToken -o tsv)" -H "Content-Type: application/json" -d "$JSON" "https://management.azure.com${POLICY_ID}?api-version=2020-01-01"
