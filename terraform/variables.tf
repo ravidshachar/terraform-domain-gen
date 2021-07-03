@@ -29,7 +29,7 @@ variable "subnet_address_prefixes" {
 
 variable "admin_username" {
     type        = string
-    default     = "osher"
+    default     = "domainadmin"
     description = "dc admin username"
 }
 
