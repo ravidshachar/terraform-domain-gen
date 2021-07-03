@@ -5,7 +5,7 @@ variable "name_prefix" {
 }
 variable "location" {
     type        = string
-    default     = "France Central"
+    default     = "West Europe"
     description = "location for all resources"
 }
 
