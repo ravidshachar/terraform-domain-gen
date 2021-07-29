@@ -9,6 +9,10 @@
     domain_name: "{{ domain_name }}"
   
   tasks:
+    - name: wait 30 seconds for connection
+      wait_for_connection:
+        timeout: 30
+
     - name: create domain
       win_domain:
         dns_domain_name: "{{ domain_name }}"

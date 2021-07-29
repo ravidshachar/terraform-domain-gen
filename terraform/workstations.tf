@@ -32,9 +32,11 @@ resource "azurerm_windows_virtual_machine" "workstation" {
     resource_group_name   = azurerm_resource_group.resource_group.name
     location              = azurerm_resource_group.resource_group.location
     network_interface_ids = [azurerm_network_interface.workstation_nic[count.index].id]
-    size                  = "Standard_B2s"
+    size                  = "Standard_A2_v2"
     admin_username        = "localadmin"
     admin_password        = var.admin_password
+    priority              = "Spot"
+    eviction_policy       = "Deallocate"
     
     source_image_reference {
       publisher = "MicrosoftWindowsDesktop"

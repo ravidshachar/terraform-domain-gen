@@ -86,9 +86,11 @@ resource "azurerm_windows_virtual_machine" "dc" {
     location              = azurerm_resource_group.resource_group.location
     resource_group_name   = azurerm_resource_group.resource_group.name
     network_interface_ids = [azurerm_network_interface.dc_nic.id]
-    size               = "Standard_B2ms"
+    size               = "Standard_A4_v2"
     admin_username        = var.admin_username
     admin_password        = var.admin_password
+    priority              = "Spot"
+    eviction_policy       = "Deallocate"
 
     # Clean Image
     source_image_reference {
