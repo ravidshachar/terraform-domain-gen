@@ -12,6 +12,7 @@ There are a few variables you can set to customize the deployment, you can see t
 * workstations_count - amount of workstations desired (default: 1)  
 ## How to use?
 Use a bash shell with azure CLI, terraform and ansible installed.  
+You should also have python installed with the requirements described in requirements.txt. I recommend using a venv and running `pip install -r requirements.txt` to easily install all dependencies.  
 create a .tfvars with the above variables, and then:
 ```
 az login

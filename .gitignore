@@ -1,4 +1,5 @@
-terraform/test.tfvars
+terraform/*.tfvars
 terraform/.terraform/*
 terraform/terraform.tfstate*
 terraform/.terraform.tfstate*
+venv/
