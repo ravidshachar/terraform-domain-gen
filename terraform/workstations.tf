@@ -90,7 +90,7 @@ resource "null_resource" "workstation_playbook" {
 
     # use a password from file so we can see the output properly
     provisioner "local-exec" {
-        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ../ansible/workstations_playbook.yml --inventory ../ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
+        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ../ansible/workstations_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
     }
 
     # delete secret file
