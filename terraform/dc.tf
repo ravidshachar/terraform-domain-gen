@@ -133,7 +133,7 @@ resource "null_resource" "enable_jit" {
 
     # enable jit
     provisioner "local-exec" {
-        command = "bash ../enable_jit.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\""
+        command = "bash ${local.repo_path}/enable_jit.sh \"${azurerm_resource_group.resource_group.name}\" \"${var.name_prefix}-jit\""
     }
 }
 
@@ -144,7 +144,7 @@ resource "null_resource" "init_jit_dc" {
 
     # init jit WinRM access for ansible
     provisioner "local-exec" {
-        command = "bash ../init_jit_winrm.sh ${azurerm_resource_group.resource_group.name} ${var.name_prefix}-jit ${azurerm_windows_virtual_machine.dc.name}"
+        command = "bash ${local.repo_path}/init_jit_winrm.sh ${azurerm_resource_group.resource_group.name} ${var.name_prefix}-jit ${azurerm_windows_virtual_machine.dc.name}"
     }
 }
 
@@ -157,7 +157,7 @@ resource "null_resource" "dc_playbook" {
 
     # change the dynamic ansible inventory to target the new resource group
     provisioner "local-exec" {
-        command = "sed -i s/\"- .*#CHANGETHIS\"/\"- ${azurerm_resource_group.resource_group.name} #CHANGETHIS\"/ ../ansible/inventory_azure_rm.yml"
+        command = "sed -i s/\"- .*#CHANGETHIS\"/\"- ${azurerm_resource_group.resource_group.name} #CHANGETHIS\"/ ${local.repo_path}/ansible/inventory_azure_rm.yml"
     }
 
     # enter the password to a local file so we can use it without suppressing output
@@ -168,6 +168,6 @@ resource "null_resource" "dc_playbook" {
     # run the ansible playbook to configure the DC
     # setup the password from a file so we can see the output properly
     provisioner "local-exec" {
-        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ../ansible/dc_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
+        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ${local.repo_path}/ansible/dc_playbook.yml --inventory=${local.repo_path}/ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
     }
 }

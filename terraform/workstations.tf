@@ -71,7 +71,7 @@ resource "null_resource" "init_jit_ws" {
 
     # init jit WinRM access for ansible
     provisioner "local-exec" {
-        command = "bash ../init_jit_winrm.sh ${azurerm_resource_group.resource_group.name} ${var.name_prefix}-jit ${join(" ", azurerm_windows_virtual_machine.workstation[*].name)}"
+        command = "bash ${local.repo_path}/init_jit_winrm.sh ${azurerm_resource_group.resource_group.name} ${var.name_prefix}-jit ${join(" ", azurerm_windows_virtual_machine.workstation[*].name)}"
     }
 }
 
@@ -90,7 +90,7 @@ resource "null_resource" "workstation_playbook" {
 
     # use a password from file so we can see the output properly
     provisioner "local-exec" {
-        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ../ansible/workstations_playbook.yml --inventory=../ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
+        command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ${local.repo_path}/ansible/workstations_playbook.yml --inventory=${local.repo_path}/ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e domain_name=${var.domain_name}"
     }
 
     # delete secret file
