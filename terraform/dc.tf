@@ -157,7 +157,7 @@ resource "null_resource" "dc_playbook" {
 
     # change the dynamic ansible inventory to target the new resource group
     provisioner "local-exec" {
-        command = "sed s/\"- .*#CHANGETHIS\"/\"- ${azurerm_resource_group.resource_group.name} #CHANGETHIS\"/ ../ansible/inventory_azure_rm.yml"
+        command = "sed -i s/\"- .*#CHANGETHIS\"/\"- ${azurerm_resource_group.resource_group.name} #CHANGETHIS\"/ ../ansible/inventory_azure_rm.yml"
     }
 
     # enter the password to a local file so we can use it without suppressing output
