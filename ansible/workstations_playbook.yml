@@ -6,17 +6,25 @@
     admin_username: "{{ admin_username }}"
     admin_password: "{{ ansible_winrm_password }}"
     safe_mode_password: "{{ ansible_winrm_password }}"
-    domain_name: "{{ domain_name }}"
+    domain_names: "{{ domain_names }}"
+    dc_ips: "{{ dc_ips }}"
 
   tasks:
     - name: wait 30 seconds for connection
       wait_for_connection:
         timeout: 30
+
+    - name: set name prefix fact
+      set_fact:
+        # this split gets the name prefix for the particular workstation, then take the
+        # domain name and private ip address from the extra vars passed
+        domain_name: "{{ domain_names[inventory_hostname.split(\"-ws\")[0]] }}"
+        domain_ip: "{{ dc_ips[inventory_hostname.split(\"-ws\")[0]] }}"
     
     - name: Set DC as DNS
       win_dns_client:
         adapter_names: "*"
-        ipv4_addresses: "{{ hostvars[groups['dcs'][0]].private_ipv4_addresses }}"
+        ipv4_addresses: "{{ domain_ip }}"
 
     - name: Join workstation to domain
       win_domain_membership:
