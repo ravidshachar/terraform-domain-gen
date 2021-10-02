@@ -86,6 +86,11 @@ resource "null_resource" "workstation_playbook" {
         null_resource.init_jit_ws
     ]
 
+    # sleep 10 to allow jit to initialize
+    provisioner "local-exec" {
+        command = "sleep 10"
+    }
+
     provisioner "local-exec" {
         command = "echo ${var.admin_password} > .secret"
     }

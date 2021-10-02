@@ -174,6 +174,11 @@ resource "null_resource" "dc_playbook" {
         null_resource.init_jit_dc
     ]
 
+    # sleep 10 to allow jit to initialize
+    provisioner "local-exec" {
+        command = "sleep 10"
+    }
+
     # change the dynamic ansible inventory to target the new resource groups
     provisioner "local-exec" {
         command = "python '${local.repo_path}/edit_inventory.py' '${local.repo_path}/ansible/inventory_azure_rm.yml' ${join(",", keys(var.prefix_to_domain_name))}"
