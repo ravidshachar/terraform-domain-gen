@@ -21,6 +21,12 @@ variable "dc_size" {
     description = "Size for domain controller"
 }
 
+variable "ex_size" {
+    type        = string
+    default     = "Standard_A4_v2"
+    description = "Size for exchange server"
+}
+
 variable "ws_size" {
     type        = string
     default     = "Standard_A2_v2"

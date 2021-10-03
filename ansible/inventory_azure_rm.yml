@@ -7,3 +7,4 @@ include_vm_resource_groups:
 conditional_groups:
   dcs: tags.type == 'dc'
   workstations: tags.type == 'workstation'
+  exchanges: tags.type == 'exchange'

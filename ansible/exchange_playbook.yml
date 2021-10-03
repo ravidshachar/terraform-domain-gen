@@ -1,6 +1,6 @@
 ---
-- name: Configure workstations
-  hosts: workstations
+- name: Configure exchange servers
+  hosts: exchanges
   gather_facts: no
   vars:
     admin_username: "{{ admin_username }}"
@@ -18,8 +18,9 @@
       set_fact:
         # this split gets the name prefix for the particular workstation, then take the
         # domain name and private ip address from the extra vars passed
-        domain_name: "{{ domain_names[inventory_hostname.split(\"-ws\")[0]] }}"
-        domain_ip: "{{ dc_ips[inventory_hostname.split(\"-ws\")[0]] }}"
+        domain_name: "{{ domain_names[inventory_hostname.split(\"-ex\")[0]] }}"
+        domain_ip: "{{ dc_ips[inventory_hostname.split(\"-ex\")[0]] }}"
 
   roles:
     - join_domain
+    - setup_exchange
