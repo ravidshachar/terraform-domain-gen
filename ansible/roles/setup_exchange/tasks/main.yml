@@ -1,29 +1,30 @@
 ---
 # tasks file for setup_exchange
-- name: Install .NET Framework 4.7.2
-  win_package:
-    path: https://go.microsoft.com/fwlink/?linkid=863265
-    arguments:
-      - /q
-      - /norestart
-
-- name: Install Visual C++
-  win_package:
-    path: https://www.microsoft.com/en-us/download/confirmation.aspx?id=40784
-    arguments:
-      - /q
-      - /norestart
+- name: install .NET 4.8 and Visual C++ 2013 redistributable
+  win_chocolatey:
+    name:
+      - netfx-4.8
+      - vcredist2013
+    state: present
+  register: ex_choco_install
 
 - name: Install UCMA
   win_package:
     path: https://www.microsoft.com/en-us/download/confirmation.aspx?id=34992
+    product_id: UCMA4
     arguments:
       - /q
       - /norestart
+    register: ex_ucma_install
 
 - name: Install mandatory windows features
   win_feature:
     name: "{{ features }}"
+  register: ex_feature_install
+
+- name: Restart if necassary
+  win_reboot:
+  when: ex_choco_install.reboot required or ex_ucma_install.reboot_required or ex_feature_install.reboot_required
 
 - name: Download Exchange iso
   win_get_url:
