@@ -21,7 +21,7 @@
 
 - name: Restart if necassary
   win_reboot:
-  when: ex_choco_install.reboot_required or ex_ucma_install.reboot_required or ex_feature_install.reboot_required
+  when: ex_ucma_install.reboot_required or ex_feature_install.reboot_required
 
 - name: Download Exchange iso
   win_get_url:
