@@ -36,21 +36,21 @@
 
 - name: Prepare AD
   win_package:
-    path: '{{ disk_image_out[0] }}\Setup.exe'
+    path: '{{ disk_image_out.mount_paths[0] }}\Setup.exe'
     arguments:
       - /IAcceptExchangeServerLicenseTerms
       - /PrepareAD
 
 - name: Prepare Schema
   win_package:
-    path: '{{ disk_image_out[0] }}\Setup.exe'
+    path: '{{ disk_image_out.mount_paths[0] }}\Setup.exe'
     arguments:
       - /IAcceptExchangeServerLicenseTerms
       - /PrepareSchema
 
 - name: Install exchange server
   win_package:
-    path: '{{ disk_image_out[0] }}\Setup.exe'
+    path: '{{ disk_image_out.mount_paths[0] }}\Setup.exe'
     arguments:
       - /IAcceptExchangeServerLicenseTerms
       - /Mode:Install
