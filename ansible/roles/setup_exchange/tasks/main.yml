@@ -15,7 +15,7 @@
     arguments:
       - /q
       - /norestart
-    register: ex_ucma_install
+  register: ex_ucma_install
 
 - name: Install mandatory windows features
   win_feature:
