@@ -25,7 +25,7 @@
 
 - name: Download Exchange iso
   win_get_url:
-    url: https://www.microsoft.com/en-us/download/confirmation.aspx?id=103478
+    url: https://download.microsoft.com/download/f/0/e/f0e65686-3761-4c9d-b8b2-9fb71a207b8d/ExchangeServer2016-x64-CU22.ISO
     dest: C:\exchange.iso
 
 - name: mount iso
