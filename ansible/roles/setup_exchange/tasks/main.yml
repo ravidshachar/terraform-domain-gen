@@ -23,10 +23,15 @@
   win_reboot:
   when: ex_ucma_install.reboot_required or ex_feature_install.reboot_required
 
+- name: Check if exchange.iso exists
+  win_stat: path= 'C:\exchange.iso'  
+  register: stat_file
+
 - name: Download Exchange iso
   win_get_url:
     url: https://download.microsoft.com/download/f/0/e/f0e65686-3761-4c9d-b8b2-9fb71a207b8d/ExchangeServer2016-x64-CU22.ISO
     dest: C:\exchange.iso
+  when: not stat_file.stat.exists
 
 - name: mount iso
   win_disk_image:
@@ -36,22 +41,22 @@
 
 - name: Prepare AD
   win_package:
-    path: '{{ disk_image_out.mount_paths[0] }}\Setup.exe'
+    path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
     arguments:
       - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
       - /PrepareAD
-      - /OrganizationName "{{ domain_name.split(\".\")[0] }} Org."
+      - "/OrganizationName {{ domain_name.split(\".\")[0] }} Org"
 
 - name: Prepare Schema
   win_package:
-    path: '{{ disk_image_out.mount_paths[0] }}\Setup.exe'
+    path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
     arguments:
       - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
       - /PrepareSchema
 
 - name: Install exchange server
   win_package:
-    path: '{{ disk_image_out.mount_paths[0] }}\Setup.exe'
+    path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
     arguments:
       - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
       - /Mode:Install
