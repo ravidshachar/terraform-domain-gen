@@ -137,7 +137,8 @@ resource "azurerm_windows_virtual_machine" "dc" {
 resource "time_sleep" "wait_for_vm_creation" {
   depends_on = [
     azurerm_windows_virtual_machine.dc,
-    azurerm_windows_virtual_machine.workstation
+    azurerm_windows_virtual_machine.workstation,
+    azurerm_windows_virtual_machine.exchange
   ]
 
   create_duration = "30s"

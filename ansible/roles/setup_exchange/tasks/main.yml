@@ -40,28 +40,34 @@
     state: present
   register: disk_image_out
 
-- name: Prepare AD
-  win_package:
-    path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
-    arguments:
-      - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
-      - /PrepareAD
-      - "/OrganizationName {{ domain_name.split(\".\")[0] }} Org"
+- name: Prepare and install Exchange
+  block:
+    - name: Prepare AD
+      win_package:
+        path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+        arguments:
+          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /PrepareAD
+          - "/OrganizationName {{ domain_name.split(\".\")[0] | capitalize }} Org"
 
-- name: Prepare Schema
-  win_package:
-    path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
-    arguments:
-      - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
-      - /PrepareSchema
+    - name: Prepare Schema
+      win_package:
+        path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+        arguments:
+          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /PrepareSchema
 
-- name: Install exchange server
-  win_package:
-    path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
-    arguments:
-      - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
-      - /Mode:Install
-      - /Roles:MB
+    - name: Install exchange server
+      win_package:
+        path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+        arguments:
+          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /Mode:Install
+          - /Roles:MB
+  become: yes
+  become_user: "{{ domain_name.split(\".\")[0] | upper }}\\{{ admin_username }}"
+  become_method: runas
+
 
 - name: Finally reboot
   win_reboot:

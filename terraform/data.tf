@@ -14,6 +14,7 @@ locals {
     name_prefix = pair[0]
     index       = pair[1]
   }]
+  exchange_set = var.deploy_exchange ? var.prefix_to_domain_name : {}
   # this object maps azure name prefixes to the private ip of the dc
   # in that rg
   domain_to_ips = jsonencode({

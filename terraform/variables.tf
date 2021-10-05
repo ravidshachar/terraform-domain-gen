@@ -63,3 +63,9 @@ variable "workstations_count" {
     error_message = "Workstations count must be smaller than 10."
   }
 }
+
+variable "deploy_exchange" {
+  type        = bool
+  default     = false
+  description = "Set to true if you want to deploy exchange servers"
+}
