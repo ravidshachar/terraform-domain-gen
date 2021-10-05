@@ -40,6 +40,7 @@
     arguments:
       - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
       - /PrepareAD
+      - /OrganizationName "{{ domain_name.split(\".\")[0] }} Org."
 
 - name: Prepare Schema
   win_package:
