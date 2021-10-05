@@ -24,7 +24,8 @@
   when: ex_ucma_install.reboot_required or ex_feature_install.reboot_required
 
 - name: Check if exchange.iso exists
-  win_stat: path= 'C:\exchange.iso'  
+  win_stat: 
+    path: C:\exchange.iso  
   register: stat_file
 
 - name: Download Exchange iso
