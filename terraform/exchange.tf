@@ -41,7 +41,7 @@ resource "azurerm_windows_virtual_machine" "exchange" {
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
-    sku       = "2019-Datacenter"
+    sku       = "2016-Datacenter"
     version   = "latest"
   }
 

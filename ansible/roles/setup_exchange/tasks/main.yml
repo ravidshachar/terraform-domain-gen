@@ -25,11 +25,7 @@
     name: "{{ features }}"
   register: ex_feature_install
 
-- name: Install IIS URL rewrite
-  win_package:
-    path: https://download.microsoft.com/download/1/2/8/128E2E22-C1B9-44A4-BE2A-5859ED1D4592/rewrite_amd64_en-US.msi
-
-- name: Restart
+- name: Restart just to be sure
   win_reboot:
 
 - name: Check if exchange.iso exists
@@ -40,9 +36,9 @@
 
 - name: Download Exchange iso
   win_get_url:
-    url: https://download.microsoft.com/download/5/3/e/53e75dbd-ca33-496a-bd23-1d861feaa02a/ExchangeServer2019-x64-CU11.ISO
+    url: https://download.microsoft.com/download/7/d/5/7d5c319b-510b-4a2c-a77a-099c6f30ab54/ExchangeServer2016-x64-CU21.ISO
     dest: C:\exchange.iso
-  #when: stat_file.stat.checksum == iso_checksum 
+  when: stat_file.stat.checksum != iso_checksum 
 
 - name: mount iso
   win_disk_image:
@@ -60,7 +56,7 @@
       win_package:
         path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
         arguments:
-          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /IAcceptExchangeServerLicenseTerms
           - /PrepareAD
           - "/OrganizationName \"{{ domain_name.split(\".\")[0] | capitalize }} Org\""
 
@@ -68,14 +64,14 @@
       win_package:
         path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
         arguments:
-          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /IAcceptExchangeServerLicenseTerms
           - /PrepareSchema
 
     - name: Install exchange server
       win_package:
         path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
         arguments:
-          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /IAcceptExchangeServerLicenseTerms
           - /Mode:Install
           - /Roles:MB
   become: yes
