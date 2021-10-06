@@ -1,6 +1,6 @@
 # public ip per exchange server
 resource "azurerm_public_ip" "exchange_ip" {
-  for_each = var.exchange_set
+  for_each = local.exchange_set
 
   name                = "${each.key}-ex-public-ip"
   resource_group_name = azurerm_resource_group.resource_group[each.key].name
@@ -10,7 +10,7 @@ resource "azurerm_public_ip" "exchange_ip" {
 
 # Exchange NIC
 resource "azurerm_network_interface" "ex_nic" {
-  for_each = var.exchange_set
+  for_each = local.exchange_set
 
   name                = "${each.key}-ex-nic"
   location            = azurerm_resource_group.resource_group[each.key].location
@@ -26,7 +26,7 @@ resource "azurerm_network_interface" "ex_nic" {
 }
 
 resource "azurerm_windows_virtual_machine" "exchange" {
-  for_each = var.exchange_set
+  for_each = local.exchange_set
 
   name                  = "${each.key}-ex"
   resource_group_name   = azurerm_resource_group.resource_group[each.key].name
@@ -62,7 +62,7 @@ resource "azurerm_windows_virtual_machine" "exchange" {
 }
 
 resource "null_resource" "init_jit_ex" {
-  for_each = var.exchange_set
+  for_each = local.exchange_set
   # let it run only after exchange servers are provisioned and the domain is ready
   depends_on = [
     azurerm_windows_virtual_machine.exchange,

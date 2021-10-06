@@ -1,6 +1,5 @@
 ---
 # vars file for setup_exchange
-ansible_become_password: "{{ admin_winrm_password }}"
 features:
   - NET-Framework-45-Features
   - RPC-over-HTTP-proxy

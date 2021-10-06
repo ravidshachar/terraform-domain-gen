@@ -32,13 +32,17 @@
   win_get_url:
     url: https://download.microsoft.com/download/f/0/e/f0e65686-3761-4c9d-b8b2-9fb71a207b8d/ExchangeServer2016-x64-CU22.ISO
     dest: C:\exchange.iso
-  when: not stat_file.stat.exists
+  #when: not stat_file.stat.exists
 
 - name: mount iso
   win_disk_image:
     image_path: C:\exchange.iso
     state: present
   register: disk_image_out
+
+- name: set ansible become pass
+  set_fact:
+    ansible_become_password: "{{ admin_password }}"
 
 - name: Prepare and install Exchange
   block:
