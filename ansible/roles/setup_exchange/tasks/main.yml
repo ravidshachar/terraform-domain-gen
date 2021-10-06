@@ -1,4 +1,8 @@
 ---
+- name: debug org name
+  debug:
+    msg: "/OrganizationName \"{{ domain_name.split(\".\")[0] | capitalize }} Org\""
+
 # tasks file for setup_exchange
 - name: install .NET 4.8 and Visual C++ 2013 redistributable
   win_chocolatey:
@@ -11,7 +15,9 @@
 - name: Install UCMA
   win_package:
     path: https://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe
-    arguments: /q /norestart
+    arguments:
+      - /q
+      - /norestart
   register: ex_ucma_install
 
 - name: Install mandatory windows features
@@ -19,20 +25,24 @@
     name: "{{ features }}"
   register: ex_feature_install
 
-- name: Restart if necassary
+- name: Install IIS URL rewrite
+  win_package:
+    path: https://download.microsoft.com/download/1/2/8/128E2E22-C1B9-44A4-BE2A-5859ED1D4592/rewrite_amd64_en-US.msi
+
+- name: Restart
   win_reboot:
-  when: ex_ucma_install.reboot_required or ex_feature_install.reboot_required
 
 - name: Check if exchange.iso exists
   win_stat: 
-    path: C:\exchange.iso  
+    path: C:\exchange.iso
+    checksum_algorithm: sha256
   register: stat_file
 
 - name: Download Exchange iso
   win_get_url:
-    url: https://download.microsoft.com/download/f/0/e/f0e65686-3761-4c9d-b8b2-9fb71a207b8d/ExchangeServer2016-x64-CU22.ISO
+    url: https://download.microsoft.com/download/5/3/e/53e75dbd-ca33-496a-bd23-1d861feaa02a/ExchangeServer2019-x64-CU11.ISO
     dest: C:\exchange.iso
-  #when: not stat_file.stat.exists
+  #when: stat_file.stat.checksum == iso_checksum 
 
 - name: mount iso
   win_disk_image:
@@ -52,7 +62,7 @@
         arguments:
           - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
           - /PrepareAD
-          - "/OrganizationName {{ domain_name.split(\".\")[0] | capitalize }} Org"
+          - "/OrganizationName \"{{ domain_name.split(\".\")[0] | capitalize }} Org\""
 
     - name: Prepare Schema
       win_package:

@@ -1,5 +1,6 @@
 ---
 # vars file for setup_exchange
+iso_checksum: 79F87AAD53E9A633291ADDEFB14DB574BACB673C784CED67C606A7356D215771
 features:
   - NET-Framework-45-Features
   - RPC-over-HTTP-proxy
@@ -34,3 +35,4 @@ features:
   - Web-WMI
   - Windows-Identity-Foundation
   - RSAT-ADDS
+  - Server-Media-Foundation
