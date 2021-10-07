@@ -39,7 +39,7 @@
   win_get_url:
     url: https://download.microsoft.com/download/7/d/5/7d5c319b-510b-4a2c-a77a-099c6f30ab54/ExchangeServer2016-x64-CU21.ISO
     dest: C:\exchange.iso
-  when: stat_file.stat.checksum != iso_checksum 
+  when: not stat_file.stat.exists or stat_file.stat.checksum != iso_checksum 
 
 - name: mount iso
   win_disk_image:
