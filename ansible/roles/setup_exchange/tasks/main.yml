@@ -4,21 +4,22 @@
     msg: "/OrganizationName \"{{ domain_name.split(\".\")[0] | capitalize }} Org\""
 
 # tasks file for setup_exchange
-- name: install .NET 4.8 and Visual C++ 2013 redistributable
+- name: install .NET 4.8, UCMA4 and Visual C++ 2013 redistributable
   win_chocolatey:
     name:
       - netfx-4.8
       - vcredist2013
+      - ucma4
     state: present
   register: ex_choco_install
 
-- name: Install UCMA
-  win_package:
-    path: https://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe
-    arguments:
-      - /q
-      - /norestart
-  register: ex_ucma_install
+#- name: Install UCMA
+#  win_package:
+#    path: https://download.microsoft.com/download/2/C/4/2C47A5C1-A1F3-4843-B9FE-84C0032C61EC/UcmaRuntimeSetup.exe
+#    arguments:
+#      - /q
+#      - /norestart
+#  register: ex_ucma_install
 
 - name: Install mandatory windows features
   win_feature:
