@@ -47,10 +47,6 @@
     state: present
   register: disk_image_out
 
-- name: set ansible become pass
-  set_fact:
-    ansible_become_password: "{{ admin_password }}"
-
 - name: Prepare and install Exchange
   block:
     - name: Prepare AD
@@ -69,16 +65,44 @@
           - /PrepareSchema
 
     - name: Install exchange server
-      win_package:
-        path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
-        arguments:
-          - /IAcceptExchangeServerLicenseTerms
-          - /Mode:Install
-          - /Roles:MB
+      win_scheduled_task:
+        name: Install_Exchange
+        actions:
+        - path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+          arguments: /IAcceptExchangeServerLicenseTerms /Mode:Install /Roles:MB
+       # Remove this action if the task shouldn't be deleted on completion
+        #- path: cmd.exe
+        #  arguments: /c schtasks.exe /Delete /TN "Install_Exchange" /F
+        - path: cmd.exe
+          arguments: /c shutdown /r
+        triggers:
+        - type: registration
   become: yes
   become_user: "{{ domain_name.split(\".\")[0] | upper }}\\{{ admin_username }}"
   become_method: runas
+  vars:
+    ansible_become_password: "{{ admin_password }}"
 
+- name: Wait for scheduled task to be done
+  block:
+    - name: Wait for the scheduled task to complete
+      win_scheduled_task_stat:
+        name: Install_Exchange
+      register: task_stat
+      until: (task_stat.state is defined and task_stat.state.status != "TASK_STATE_RUNNING") or (task_stat.task_exists == False)
+      retries: 60
+      delay: 60
+  rescue:
+    - name: Wait for connection if winrm is restarting
+      wait_for_connection:
 
-- name: Finally reboot
-  win_reboot:
+- name: Wait for the scheduled task to complete
+  win_scheduled_task_stat:
+    name: Install_Exchange
+  register: task_stat
+  until: (task_stat.state is defined and task_stat.state.status != "TASK_STATE_RUNNING") or (task_stat.task_exists == False)
+  retries: 60
+  delay: 60
+
+#- name: Finally reboot
+#  win_reboot:
