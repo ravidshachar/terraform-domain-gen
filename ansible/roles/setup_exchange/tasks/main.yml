@@ -67,6 +67,7 @@
     - name: Install exchange server
       win_scheduled_task:
         name: Install_Exchange
+        enabled: yes
         actions:
         - path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
           arguments: /IAcceptExchangeServerLicenseTerms /Mode:Install /Roles:MB
@@ -77,6 +78,7 @@
           arguments: /c shutdown /r
         triggers:
         - type: registration
+        start_when_available: yes
   become: yes
   become_user: "{{ domain_name.split(\".\")[0] | upper }}\\{{ admin_username }}"
   become_method: runas
