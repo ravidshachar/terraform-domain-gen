@@ -1,0 +1,61 @@
+parameters:
+- name: prefix_to_domain_name
+  type: object
+- name: location
+  type: string
+- name: dc_size
+  type: string
+- name: ws_size
+  type: string
+- name: ex_size
+  type: string
+- name: vnet_address_space
+  type: string
+- name: admin_username
+  type: string
+- name: workstations_count
+  type: number
+- name: deploy_exchange
+  type: boolean
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+${{ each parameter in parameters }}:
+- script: echo '{{ parameter.Key }}={{ parameter.Value }}' >> parameters.tfvars
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.8.12'
+    addToPath: true
+    architecture: 'x64'
+
+- script: python -m pip install --upgrade pip setuptools wheel
+  displayName: 'Install tools'
+
+- script: pip install -r requirements.txt
+  displayName: 'Install requirements'
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+    backendServiceArm: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
+    backendAzureRmResourceGroupName: 'IAC-RG'
+    backendAzureRmStorageAccountName: 'iacsa'
+    backendAzureRmContainerName: 'terraform-state'
+    backendAzureRmKey: 'terraform.tfstate'
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+    commandOptions: '-auto-approve -var-file parameters.tfvars'
+    environmentServiceNameAzureRM: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
+  env:
+    TF_VAR_admin_password: $(admin_password)
