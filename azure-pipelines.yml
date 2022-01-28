@@ -1,31 +1,32 @@
 parameters:
 - name: prefix_to_domain_name
   type: object
-  default: ""
+  default:
+    ad-lab: test.lab
 - name: location
   type: string
-  default: ""
+  default: "West Europe"
 - name: dc_size
   type: string
-  default: ""
+  default: "Standard_A4_v2"
 - name: ws_size
   type: string
-  default: ""
+  default: "Standard_A2_v2"
 - name: ex_size
   type: string
-  default: ""
+  default: "Standard_A2m_v2"
 - name: vnet_address_space
   type: string
-  default: ""
+  default: "10.0.0.0/8"
 - name: admin_username
   type: string
-  default: ""
+  default: "domainadmin"
 - name: workstations_count
   type: number
-  default: ""
+  default: "1"
 - name: deploy_exchange
   type: boolean
-  default: ""
+  default: false
 
 trigger:
 - master
