@@ -1,0 +1,31 @@
+---
+- name: install the Win32-OpenSSH service
+  win_chocolatey:
+    name: openssh
+    package_params: /SSHServerFeature
+    state: present
+
+- name: set the default shell to PowerShell
+  win_regedit:
+    path: HKLM:\SOFTWARE\OpenSSH
+    name: DefaultShell
+    data: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    type: string
+    state: present
+
+#- name: Generate /etc/ssh/ RSA host key
+#  local_action:
+#    module: command 
+#    cmd: ssh-keygen -q -t rsa -f /etc/ssh/ssh_host_rsa_key -C "" -N ""
+#    args:
+#      creates: /etc/ssh/ssh_host_rsa_key
+
+- name: Ensure .ssh directory exists
+  win_file:
+    path: '%USERPROFILE%\.ssh\'
+    state: directory
+
+- name: Copy public key to authorized_keys file
+  ansible.windows.win_copy:
+    src: /etc/ssh/ssh_host_rsa_key.pub
+    dest: '%USERPROFILE%\.ssh\authorized_keys'

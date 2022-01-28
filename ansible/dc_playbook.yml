@@ -8,44 +8,17 @@
     safe_mode_password: "{{ ansible_winrm_password }}"
     domain_names: "{{ domain_names }}"
   
-  tasks:
+  pre_tasks:
     - name: wait 30 seconds for connection
       wait_for_connection:
-        timeout: 30
-  
+        timeout: 120
+        
     - name: set name prefix fact
       set_fact:
         # this split gets the name prefix for the particular dc, then take
         # the domain name from the extra vars passed
         domain_name: "{{ domain_names[inventory_hostname.split(\"-dc\")[0]] }}"
 
-    - name: create domain
-      win_domain:
-        dns_domain_name: "{{ domain_name }}"
-        safe_mode_password: "{{ safe_mode_password }}"
-      register: domain_creation
-    
-    - name: reboot if neccassary
-      win_reboot: {}
-      when: domain_creation.reboot_required
 
-    - name: delegate to domain controller
-      win_domain_controller:
-        dns_domain_name: "{{ domain_name }}"
-        domain_admin_user: "{{ admin_username }}@{{ domain_name }}"
-        domain_admin_password: "{{ admin_password }}"
-        safe_mode_password: "{{ safe_mode_password }}"
-        state: domain_controller
-        log_path: C:\Windows\Temp\dc_log.txt
-      register: dc_promotion
-
-    - name: reboot if neccassary
-      win_reboot: {}
-      when: dc_promotion.reboot_required
-
-    - name: domain join bug workaround, enable sysvolready
-      win_regedit:
-        path: HKLM:\SYSTEM\CurrentControlSet\Services\Netlogon\Parameters
-        name: SysvolReady
-        data: 1
-        type: dword
+  roles:
+    - create_domain

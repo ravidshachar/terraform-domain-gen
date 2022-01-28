@@ -1,0 +1,126 @@
+---
+- name: debug org name
+  debug:
+    msg: "/OrganizationName \"{{ domain_name.split(\".\")[0] | capitalize }} Org\""
+
+- name: Add account to Log on as a service
+  win_user_right:
+    name: SeServiceLogonRight
+    users:
+    - "{{ domain_name.split(\".\")[0] | upper }}\\{{ admin_username }}"
+    action: add
+
+- name: Install mandatory windows features
+  win_feature:
+    name: "{{ features }}"
+  register: ex_feature_install
+
+- name: Restart just to be sure
+  win_reboot:
+  when: ex_feature_install.changed
+
+# tasks file for setup_exchange
+- name: install .NET 4.8, UCMA4 and Visual C++ 2013 redistributable
+  win_chocolatey:
+    name:
+      - netfx-4.8
+      - vcredist2013
+      - ucma4
+      - urlrewrite
+    state: present
+  register: ex_choco_install
+
+- name: Restart just to be sure
+  win_reboot:
+  when: ex_choco_install.changed
+
+- name: Check if exchange.iso exists
+  win_stat: 
+    path: C:\exchange.iso
+    checksum_algorithm: sha256
+  register: stat_file
+
+- name: Download Exchange iso
+  win_get_url:
+    url: "{{ iso_url }}"
+    dest: C:\exchange.iso
+  when: not stat_file.stat.exists or stat_file.stat.checksum != iso_checksum 
+
+- name: mount iso
+  win_disk_image:
+    image_path: C:\exchange.iso
+    state: present
+  register: disk_image_out
+
+- name: Prepare and install Exchange
+  block:
+    - name: Check whoami
+      win_command: whoami
+      register: command_output
+    
+    - name: print whoami command_output
+      debug:
+        var: command_output.stdout_lines
+
+    - name: Prepare Schema
+      win_package:
+        path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+        arguments:
+          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /PrepareSchema
+
+    - name: Prepare AD
+      win_package:
+        path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+        arguments:
+          - /IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF
+          - /PrepareAD
+          - "/OrganizationName \"{{ domain_name.split(\".\")[0] | capitalize }} Org\""
+
+    - name: Install exchange server
+      win_scheduled_task:
+        name: Install_Exchange
+        username: "{{ domain_name.split(\".\")[0] | upper }}\\{{ admin_username }}"
+        password: '{{ admin_password }}'
+        logon_type: password
+        enabled: yes
+        actions:
+        - path: '{{ disk_image_out.mount_paths[0] }}Setup.exe'
+          arguments: '/IAcceptExchangeServerLicenseTerms_DiagnosticDataOFF /Mode:Install /Roles:MB'
+       # Remove this action if the task shouldn't be deleted on completion
+        #- path: cmd.exe
+        #  arguments: /c schtasks.exe /Delete /TN "Install_Exchange" /F
+        #- path: cmd.exe
+        #  arguments: /c shutdown /r
+        triggers:
+        - type: registration
+        start_when_available: yes
+  become: yes
+  become_user: "{{ domain_name.split(\".\")[0] | upper }}\\{{ admin_username }}"
+  #become_method: runas
+  vars:
+    ansible_become_password: "{{ admin_password }}"
+
+- name: Wait for the scheduled task to complete (1)
+  win_scheduled_task_stat:
+    name: Install_Exchange
+  register: task_stat
+  until: (task_stat.state is defined and task_stat.state.status != "TASK_STATE_RUNNING") or (task_stat.task_exists == False)
+  retries: 100
+  delay: 60
+  ignore_errors: yes
+  ignore_unreachable: yes
+
+- name: Wait for connection if winrm is restarting
+  wait_for_connection:
+
+- name: Wait for the scheduled task to complete (2)
+  win_scheduled_task_stat:
+    name: Install_Exchange
+  register: task_stat
+  until: (task_stat.state is defined and task_stat.state.status != "TASK_STATE_RUNNING") or (task_stat.task_exists == False)
+  retries: 100
+  delay: 60
+
+- name: Reboot last time!
+  win_reboot:

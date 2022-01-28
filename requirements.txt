@@ -151,6 +151,5 @@ tabulate==0.8.9
 urllib3==1.26.6
 vsts==0.1.25
 websocket-client==0.56.0
-winrm==0.4.1
 wrapt==1.12.1
 xmltodict==0.12.0
