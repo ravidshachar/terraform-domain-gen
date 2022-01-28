@@ -1,22 +1,31 @@
 parameters:
 - name: prefix_to_domain_name
   type: object
+  default: ""
 - name: location
   type: string
+  default: ""
 - name: dc_size
   type: string
+  default: ""
 - name: ws_size
   type: string
+  default: ""
 - name: ex_size
   type: string
+  default: ""
 - name: vnet_address_space
   type: string
+  default: ""
 - name: admin_username
   type: string
+  default: ""
 - name: workstations_count
   type: number
+  default: ""
 - name: deploy_exchange
   type: boolean
+  default: ""
 
 trigger:
 - master
@@ -25,8 +34,11 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- ${{ each parameter in parameters }}:
-  - script: echo '{{ parameter.Key }}={{ parameter.Value }}' >> parameters.tfvars
+# This step maps parameters to tfvars, using .auto.tfvars removes the need to use -tf-vars argument
+- ${{ each item in parameters }}:
+     - script: |
+        [[ $item.value ]] && echo '${{ item.key }}=${{ replace(convertToJson(item.value), ':', '=')}}' >> parameters.auto.tfvars
+       displayName: "JsonVar ${{ item.key }}"
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.8.12'
@@ -55,7 +67,7 @@ steps:
     provider: 'azurerm'
     command: 'apply'
     workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-    commandOptions: '-auto-approve -var-file parameters.tfvars'
+    commandOptions: '-auto-approve'
     environmentServiceNameAzureRM: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
   env:
     TF_VAR_admin_password: $(admin_password)
