@@ -125,7 +125,6 @@ oauthlib==3.2.0
 packaging==21.3
 paramiko==2.9.2
 pathlib2==2.3.7.post0
-pkg_resources==0.0.0
 pkginfo==1.8.2
 portalocker==1.7.1
 psutil==5.9.0
