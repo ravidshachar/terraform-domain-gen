@@ -70,5 +70,3 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
     commandOptions: '-var="admin_password=$(admin_password)" -auto-approve'
     environmentServiceNameAzureRM: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
-  env:
-    TF_VAR_admin_password: $(admin_password)
