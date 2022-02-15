@@ -169,6 +169,8 @@ resource "null_resource" "init_jit_dc" {
 }
 
 resource "null_resource" "dc_playbook" {
+  count = 0
+
   depends_on = [
     azurerm_windows_virtual_machine.dc,
     azurerm_windows_virtual_machine.workstation,

@@ -78,6 +78,7 @@ resource "null_resource" "init_jit_ws" {
 }
 
 resource "null_resource" "workstation_playbook" {
+  count = 0
 
   # let it run only after jit is initiated for ws
   depends_on = [

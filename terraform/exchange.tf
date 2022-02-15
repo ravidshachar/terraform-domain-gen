@@ -76,7 +76,9 @@ resource "null_resource" "init_jit_ex" {
 }
 
 resource "null_resource" "exchange_playbook" {
-  count     = var.deploy_exchange ? 1 : 0
+  #count     = var.deploy_exchange ? 1 : 0
+  count = 0
+
   # let it run only after jit is initiated for ws
   depends_on = [
     azurerm_windows_virtual_machine.exchange,
