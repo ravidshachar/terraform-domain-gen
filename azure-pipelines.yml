@@ -101,43 +101,31 @@ steps:
   displayName: 'edit inventory file'
 
 - task: AzureCLI@2
-  displayName: 'Azure CLI'
+  displayName: 'Ansible playbooks'
   inputs:
     azureSubscription: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]$(az account show --query="id" -o tsv)"
-      echo "##vso[task.setvariable variable=ARM_CLIENT_ID]${servicePrincipalId}"
-      echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]${servicePrincipalKey}"
-      echo "##vso[task.setvariable variable=ARM_TENANT_ID]${tenantId}"
       ansible-inventory -i ./ansible/inventory_azure_rm.yml --graph
+      ansible-playbook ./ansible/dc_playbook.yml --inventory=./ansible/inventory_azure_rm.yml --user=$(parameter.admin_username) -e admin_username=$(parameter.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)"
+      ansible-playbook ./ansible/workstation_playbook.yml --inventory=./ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)" -e "$(Outputs.domain_to_ips)"
     addSpnToEnvironment: true
 
-- task: Ansible@0
-  inputs:
-    ansibleInterface: 'agentMachine'
-    playbookPathOnAgentMachine: './ansible/dc_playbook.yml'
-    inventoriesAgentMachine: 'file'
-    inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
-    args: '--user=$(parameter.admin_username) -e admin_username=$(parameter.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
-  displayName: 'dc playbook'
-  env:
-    AZURE_CLIENT_ID: $(ARM_CLIENT_ID)
-    AZURE_SECRET: $(ARM_CLIENT_SECRET)
-    AZURE_TENANT: $(ARM_TENANT_ID)
-    AZURE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
-
-- task: Ansible@0
-  inputs:
-    ansibleInterface: 'agentMachine'
-    playbookPathOnAgentMachine: './ansible/workstations_playbook.yml'
-    inventoriesAgentMachine: 'file'
-    inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
-    args: '--user=localadmin -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)" -e "$(Outputs.domain_to_ips)"'
-  displayName: 'workstation playbook'
-  env:
-    AZURE_CLIENT_ID: $(ARM_CLIENT_ID)
-    AZURE_SECRET: $(ARM_CLIENT_SECRET)
-    AZURE_TENANT: $(ARM_TENANT_ID)
-    AZURE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+#- task: Ansible@0
+#  inputs:
+#    ansibleInterface: 'agentMachine'
+#    playbookPathOnAgentMachine: './ansible/dc_playbook.yml'
+#    inventoriesAgentMachine: 'file'
+#    inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
+#    args: '--user=$(parameter.admin_username) -e admin_username=$(parameter.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
+#  displayName: 'dc playbook'
+#
+#- task: Ansible@0
+#  inputs:
+#    ansibleInterface: 'agentMachine'
+#    playbookPathOnAgentMachine: './ansible/workstations_playbook.yml'
+#    inventoriesAgentMachine: 'file'
+#    inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
+#    args: '--user=localadmin -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)" -e "$(Outputs.domain_to_ips)"'
+#  displayName: 'workstation playbook'
