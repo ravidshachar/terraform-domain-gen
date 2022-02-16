@@ -108,7 +108,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       ansible-inventory -i ./ansible/inventory_azure_rm.yml --graph
-      ansible-inventory -i ansible/inventory_azure_rm.yml --list --export --output ./ansible/static_inventory.json
+      ansible-inventory -i ansible/inventory_azure_rm.yml --list --export --output $(System.DefaultWorkingDirectory)/ansible/static_inventory.json
     addSpnToEnvironment: true
 
 - task: Ansible@0
@@ -116,7 +116,7 @@ steps:
     ansibleInterface: 'agentMachine'
     playbookPathOnAgentMachine: './ansible/dc_playbook.yml'
     inventoriesAgentMachine: 'file'
-    inventoryFileOnAgentMachine: './ansible/static_inventory.json'
+    inventoryFileOnAgentMachine: '$(System.DefaultWorkingDirectory)/ansible/static_inventory.json'
     args: '--user=$(parameter.admin_username) -e admin_username=$(parameter.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
   displayName: 'dc playbook'
 
@@ -125,6 +125,6 @@ steps:
     ansibleInterface: 'agentMachine'
     playbookPathOnAgentMachine: './ansible/workstations_playbook.yml'
     inventoriesAgentMachine: 'file'
-    inventoryFileOnAgentMachine: './ansible/static_inventory.json'
+    inventoryFileOnAgentMachine: '$(System.DefaultWorkingDirectory)/ansible/static_inventory.json'
     args: '--user=localadmin -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)" -e "$(Outputs.domain_to_ips)"'
   displayName: 'workstation playbook'
