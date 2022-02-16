@@ -111,20 +111,8 @@ steps:
       echo "##vso[task.setvariable variable=ARM_CLIENT_ID]${servicePrincipalId}"
       echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]${servicePrincipalKey}"
       echo "##vso[task.setvariable variable=ARM_TENANT_ID]${tenantId}"
+      ansible-inventory -i ./ansible/inventory_azure_rm.yml --graph
     addSpnToEnvironment: true
-
-- script: |
-    cat ansible/inventory_azure_rm.yml
-    ansible-galaxy collection list
-    ansible-inventory -i ./ansible/inventory_azure_rm.yml --graph
- #   ansible-galaxy collection install azure.azcollection
- #   pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
- #   ansible-galaxy collection install azure.azcollection --force
-  env:
-    AZURE_CLIENT_ID: $(ARM_CLIENT_ID)
-    AZURE_SECRET: $(ARM_CLIENT_SECRET)
-    AZURE_TENANT: $(ARM_TENANT_ID)
-    AZURE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
 
 - task: Ansible@0
   inputs:
