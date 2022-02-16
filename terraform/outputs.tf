@@ -11,3 +11,15 @@ output "workstations_public_ip" {
     "${combo.name_prefix}-ws${combo.index}" => azurerm_public_ip.workstation_ip["${combo.name_prefix}.${combo.index}"].ip_address
   })
 }
+
+output "rgs_string" {
+  value = join(",", keys(var.prefix_to_domain_name))
+}
+
+output "prefix_to_domain_name" {
+  value = local.prefix_to_domain_name
+}
+
+output "domain_to_ips" {
+  value = local.domain_to_ips
+}
