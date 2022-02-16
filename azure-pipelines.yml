@@ -103,9 +103,10 @@ steps:
 - script: |
     cat ansible/inventory_azure_rm.yml
     ansible-galaxy collection list
-    ansible-galaxy collection install azure.azcollection
-    pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
-    ansible-galaxy collection install azure.azcollection --force
+    ansible-inventory -i ./ansible/inventory_azure_rm.yml --graph
+ #   ansible-galaxy collection install azure.azcollection
+ #   pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
+ #   ansible-galaxy collection install azure.azcollection --force
 
 - task: Ansible@0
   inputs:
@@ -113,7 +114,7 @@ steps:
     playbookPathOnAgentMachine: './ansible/dc_playbook.yml'
     inventoriesAgentMachine: 'file'
     inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
-    args: '--user=$(parameters.admin_username) -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
+    args: '--user=$(parameter.admin_username) -e admin_username=$(parameter.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
   displayName: 'dc playbook'
 
 - task: Ansible@0
