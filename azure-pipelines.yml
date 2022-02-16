@@ -100,6 +100,19 @@ steps:
     arguments: 'ansible/inventory_azure_rm.yml $(Outputs.rgs_string)'
   displayName: 'edit inventory file'
 
+- task: AzureCLI@2
+  displayName: 'Azure CLI'
+  inputs:
+    azureSubscription: '$(SUBSCRIPTION_NAME)'
+    addSpnToEnvironment: true
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]$(az account show --query="id" -o tsv)"
+      echo "##vso[task.setvariable variable=ARM_CLIENT_ID]${servicePrincipalId}"
+      echo "##vso[task.setvariable variable=ARM_CLIENT_SECRET]${servicePrincipalKey}"
+      echo "##vso[task.setvariable variable=ARM_TENANT_ID]${tenantId}"
+
 - script: |
     cat ansible/inventory_azure_rm.yml
     ansible-galaxy collection list
@@ -107,6 +120,11 @@ steps:
  #   ansible-galaxy collection install azure.azcollection
  #   pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
  #   ansible-galaxy collection install azure.azcollection --force
+  env:
+    AZURE_CLIENT_ID: $(ARM_CLIENT_ID)
+    AZURE_SECRET: $(ARM_CLIENT_SECRET)
+    AZURE_TENANT: $(ARM_TENANT_ID)
+    AZURE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
 
 - task: Ansible@0
   inputs:
@@ -116,6 +134,11 @@ steps:
     inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
     args: '--user=$(parameter.admin_username) -e admin_username=$(parameter.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
   displayName: 'dc playbook'
+  env:
+    AZURE_CLIENT_ID: $(ARM_CLIENT_ID)
+    AZURE_SECRET: $(ARM_CLIENT_SECRET)
+    AZURE_TENANT: $(ARM_TENANT_ID)
+    AZURE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
 
 - task: Ansible@0
   inputs:
@@ -125,3 +148,8 @@ steps:
     inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
     args: '--user=localadmin -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)" -e "$(Outputs.domain_to_ips)"'
   displayName: 'workstation playbook'
+  env:
+    AZURE_CLIENT_ID: $(ARM_CLIENT_ID)
+    AZURE_SECRET: $(ARM_CLIENT_SECRET)
+    AZURE_TENANT: $(ARM_TENANT_ID)
+    AZURE_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
