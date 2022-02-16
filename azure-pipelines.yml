@@ -103,6 +103,9 @@ steps:
 - script: |
     cat ansible/inventory_azure_rm.yml
     ansible-galaxy collection list
+    ansible-galaxy collection install azure.azcollection
+    pip install -r ~/.ansible/collections/ansible_collections/azure/azcollection/requirements-azure.txt
+    ansible-galaxy collection install azure.azcollection --force
 
 - task: Ansible@0
   inputs:
