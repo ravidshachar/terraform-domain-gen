@@ -62,6 +62,7 @@ steps:
     backendAzureRmStorageAccountName: 'iacsa'
     backendAzureRmContainerName: 'terraform-state'
     backendAzureRmKey: 'terraform.tfstate'
+  displayName: 'terraform init'
 
 - task: TerraformTaskV2@2
   inputs:
@@ -72,3 +73,47 @@ steps:
     environmentServiceNameAzureRM: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
   env:
     TF_VAR_admin_password: $(admin_password)
+  displayName: 'terraform apply'
+
+- bash: |
+    set -euo pipefail
+    echo "Setting job variables from Terraform outputs:"
+    terraform output -json | jq -r '
+      . as $in
+      | keys[]
+      | ($in[.].value | tostring | gsub("\\"; "\\") | gsub("\n"; "\n")) as $value
+      | ($in[.].sensitive | tostring) as $sensitive
+      | [
+        "- " + . + ": " + if $in[.].sensitive then "(sensitive)" else $value end,  # output name to console
+        "##vso[task.setvariable variable=" + . + ";isSecret=" + $sensitive + "]" + $value,  # set as ADO task variable
+        "##vso[task.setvariable variable=" + . + ";isOutput=true;isSecret=" + $sensitive + "]" + $value  # also set as ADO job variable
+        ]
+      | .[]'
+  name: Outputs
+  displayName: 'Read Terraform outputs'
+  workingDirectory: './terraform'
+
+- task: PythonScript@0
+  inputs:
+    scriptSource: 'filePath'
+    scriptPath: 'edit_inventory.py'
+    arguments: 'ansible/inventory_azure_rm.yml $(Outputs.rgs_string)'
+  displayName: 'edit inventory file'
+
+- task: Ansible@0
+  inputs:
+    ansibleInterface: 'agentMachine'
+    playbookPathOnAgentMachine: './ansible/dc_playbook.yml'
+    inventoriesAgentMachine: 'file'
+    inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
+    args: '--user=$(parameters.admin_username) -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e $(Outputs.prefix_to_domain_string)'
+  displayName: 'dc playbook'
+
+- task: Ansible@0
+  inputs:
+    ansibleInterface: 'agentMachine'
+    playbookPathOnAgentMachine: './ansible/workstations_playbook.yml'
+    inventoriesAgentMachine: 'file'
+    inventoryFileOnAgentMachine: './ansible/inventory_azure_rm.yml'
+    args: '--user=localadmin -e admin_username=$(parameters.admin_username) -e ansible_winrm_password=$(admin_password) -e "$(Outputs.prefix_to_domain_string)" -e "$(Outputs.domain_to_ips)"'
+  displayName: 'workstation playbook'
