@@ -17,7 +17,7 @@ output "rgs_string" {
 }
 
 output "prefix_to_domain_string" {
-  value = local.prefix_to_domain_name
+  value = local.prefix_to_domain_string
 }
 
 output "domain_to_ips" {
