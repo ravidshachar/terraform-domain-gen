@@ -16,7 +16,7 @@ output "rgs_string" {
   value = join(",", keys(var.prefix_to_domain_name))
 }
 
-output "prefix_to_domain_name" {
+output "prefix_to_domain_string" {
   value = local.prefix_to_domain_name
 }
 
