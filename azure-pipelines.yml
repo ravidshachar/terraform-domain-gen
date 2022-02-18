@@ -109,6 +109,8 @@ steps:
     inlineScript: |
       ansible-inventory -i ./ansible/inventory_azure_rm.yml --graph
       ansible-inventory -i ansible/inventory_azure_rm.yml --list --export --output $(System.DefaultWorkingDirectory)/ansible/static_inventory.json
+      ansible-inventory -i ansible/static_inventory.yml --graph
+      cat ansible/static_inventory.yml
     addSpnToEnvironment: true
 
 - task: Ansible@0
