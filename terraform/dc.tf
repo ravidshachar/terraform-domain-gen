@@ -146,23 +146,25 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
 
   settings = <<SETTINGS
     {
-      "Modulesurl": "${format("https://%s.blob.core.windows.net/%s/%s%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file, "PrivateSettingsRef:configurationUrlSasToken")}",
-      "ConfigurationFunction": "deploy_ad.ps1\\ad_setup",
-      "properties": {
-        "DomainName": "${each.value}",
-        "AdminCreds": {
-          "UserName": "${var.admin_username}",
-          "Password": "PrivateSettingsRef:AdminPassword"
-        }
+      "configuration": {
+        "url": "${format("https://%s.blob.core.windows.net/%s/%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file)}",
+        "script": "deploy-ADRole.ps1",
+        "function": "ad_setup" 
+      }
+      "configurationArguments": {
+        "DomainName": "${each.value}"
       }
     }
   SETTINGS
 
   protected_settings = <<PROTECTED
     {
-      "Items": {
-        "configurationUrlSasToken": ${data.azurerm_storage_account_sas.iacsa_sas.sas},
-        "AdminPassword": "${var.admin_password}"
+      "configurationUrlSasToken": ${data.azurerm_storage_account_sas.iacsa_sas.sas},
+      "configurationArguments": {
+        "AdminCreds": {
+          "UserName": "${var.admin_username}"
+          "Password": "${var.admin_password}"
+        }
       }
     }
   PROTECTED
