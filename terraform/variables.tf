@@ -69,3 +69,22 @@ variable "deploy_exchange" {
   default     = false
   description = "Set to true if you want to deploy exchange servers"
 }
+
+variable "dsc_sa_rg" {
+  type        = string
+  default     = "IAC-RG"
+  description = "The resource group that contains the storage account for dscs"
+}
+
+variable "dsc_sa" {
+  type        = string
+  default     = "iacsa"
+  description = "The storage account containing the dsc files"
+}
+
+variable "dsc_sa_container" {
+  type        = string
+  default     = "dscscripts"
+  description = "The container containing the dsc scripts"
+}
+

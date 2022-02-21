@@ -2,8 +2,7 @@ plugin: azure.azcollection.azure_rm
 auth_source: cli
 include_vm_resource_groups:
   # the CHANGETHIS tag is used to replace the resource group name dynamically
-  - tf-test1-rg
-  - tf-test2-rg
+  - ad-lab-rg
 conditional_groups:
   dcs: tags.type == 'dc'
   workstations: tags.type == 'workstation'

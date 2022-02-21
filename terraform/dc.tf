@@ -15,6 +15,7 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = [cidrsubnet(var.vnet_address_space, 8, index(keys(var.prefix_to_domain_name), each.key))]
   location            = azurerm_resource_group.resource_group[each.key].location
   resource_group_name = azurerm_resource_group.resource_group[each.key].name
+  dns_servers         = [azurerm_network_interface.dc_nic[each.key].private_ip_address]
 }
 
 # main subnet 10.0.0.0/24
@@ -134,65 +135,99 @@ resource "azurerm_windows_virtual_machine" "dc" {
   }
 }
 
-resource "time_sleep" "wait_for_vm_creation" {
-  depends_on = [
-    azurerm_windows_virtual_machine.dc,
-    azurerm_windows_virtual_machine.workstation,
-    azurerm_windows_virtual_machine.exchange
-  ]
-
-  create_duration = "30s"
-}
-
-resource "null_resource" "enable_jit" {
+resource "azurerm_virtual_machine_extension" "deploy_dc" {
   for_each = var.prefix_to_domain_name
-  depends_on = [
-    time_sleep.wait_for_vm_creation
-  ]
 
-  # enable jit
-  provisioner "local-exec" {
-    command = "bash ${local.repo_path}/enable_jit.sh \"${azurerm_resource_group.resource_group[each.key].name}\" \"${each.key}-jit\""
-  }
+  name                 = "deploy_dc"
+  virtual_machine_id   = azurerm_windows_virtual_machine.dc[each.key]
+  publisher            = "Microsoft.Powershell"
+  type                 = "DSC"
+  type_handler_version = "2.9"
+
+  settings = <<SETTINGS
+    {
+      "Modulesurl": "${format("https://%s.blob.core.windows.net/%s/%s%s", var.dsc_sa, "deploy_ad.zip", "PrivateSettingsRef:configurationUrlSasToken")}",
+      "ConfigurationFunction": "deploy_ad.ps1\\ad_setup",
+      "properties": {
+        "DomainName": "${each.value}",
+        "AdminCreds": {
+          "UserName": "${var.admin_username}",
+          "Password": "PrivateSettingsRef:AdminPassword"
+        }
+      }
+    }
+  SETTINGS
+
+  protected_settings = <<PROTECTED
+    {
+      "Items": {
+        "configurationUrlSasToken": ${azurerm_storage_account_sas.iacsa_sas.sas},
+        "AdminPassword": "${var.admin_password}"
+      }
+    }
+  PROTECTED
 }
 
-resource "null_resource" "init_jit_dc" {
-  for_each = var.prefix_to_domain_name
-  depends_on = [
-    null_resource.enable_jit
-  ]
-
-  # init jit WinRM access for ansible
-  provisioner "local-exec" {
-    command = "bash ${local.repo_path}/init_jit_winrm.sh ${azurerm_resource_group.resource_group[each.key].name} ${each.key}-jit ${azurerm_windows_virtual_machine.dc[each.key].name}"
-  }
-}
-
-resource "null_resource" "dc_playbook" {
-  depends_on = [
-    azurerm_windows_virtual_machine.dc,
-    azurerm_windows_virtual_machine.workstation,
-    null_resource.init_jit_dc
-  ]
-
-  # sleep 10 to allow jit to initialize
-  provisioner "local-exec" {
-    command = "sleep 10"
-  }
-
-  # change the dynamic ansible inventory to target the new resource groups
-  provisioner "local-exec" {
-    command = "python '${local.repo_path}/edit_inventory.py' '${local.repo_path}/ansible/inventory_azure_rm.yml' ${join(",", keys(var.prefix_to_domain_name))}"
-  }
-
-  # enter the password to a local file so we can use it without suppressing output
-  provisioner "local-exec" {
-    command = "echo ${var.admin_password} > .secret"
-  }
-
-  # run the ansible playbook to configure the DC
-  # setup the password from a file so we can see the output properly
-  provisioner "local-exec" {
-    command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ${local.repo_path}/ansible/dc_playbook.yml --inventory=${local.repo_path}/ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e '${local.prefix_to_domain_string}'"
-  }
-}
+#resource "time_sleep" "wait_for_vm_creation" {
+#  depends_on = [
+#    azurerm_windows_virtual_machine.dc,
+#    azurerm_windows_virtual_machine.workstation,
+#    azurerm_windows_virtual_machine.exchange
+#  ]
+#
+#  create_duration = "30s"
+#}
+#
+#resource "null_resource" "enable_jit" {
+#  for_each = var.prefix_to_domain_name
+#  depends_on = [
+#    time_sleep.wait_for_vm_creation
+#  ]
+#
+#  # enable jit
+#  provisioner "local-exec" {
+#    command = "bash ${local.repo_path}/enable_jit.sh \"${azurerm_resource_group.resource_group[each.key].name}\" \"${each.key}-jit\""
+#  }
+#}
+#
+#resource "null_resource" "init_jit_dc" {
+#  for_each = var.prefix_to_domain_name
+#  depends_on = [
+#    null_resource.enable_jit
+#  ]
+#
+#  # init jit WinRM access for ansible
+#  provisioner "local-exec" {
+#    command = "bash ${local.repo_path}/init_jit_winrm.sh ${azurerm_resource_group.resource_group[each.key].name} ${each.key}-jit ${azurerm_windows_virtual_machine.dc[each.key].name}"
+#  }
+#}
+#
+#resource "null_resource" "dc_playbook" {
+#  depends_on = [
+#    azurerm_windows_virtual_machine.dc,
+#    azurerm_windows_virtual_machine.workstation,
+#    null_resource.init_jit_dc
+#  ]
+#
+#  # sleep 10 to allow jit to initialize
+#  provisioner "local-exec" {
+#    command = "sleep 10"
+#  }
+#
+#  # change the dynamic ansible inventory to target the new resource groups
+#  provisioner "local-exec" {
+#    command = "python '${local.repo_path}/edit_inventory.py' '${local.repo_path}/ansible/inventory_azure_rm.yml' ${join(",", keys(var.prefix_to_domain_name))}"
+#  }
+#
+#  # enter the password to a local file so we can use it without suppressing output
+#  provisioner "local-exec" {
+#    command = "echo ${var.admin_password} > .secret"
+#  }
+#
+#  # run the ansible playbook to configure the DC
+#  # setup the password from a file so we can see the output properly
+#  provisioner "local-exec" {
+#    command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ${local.repo_path}/ansible/dc_playbook.yml --inventory=${local.repo_path}/ansible/inventory_azure_rm.yml --user=${var.admin_username} -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e '${local.prefix_to_domain_string}'"
+#  }
+#}
+#

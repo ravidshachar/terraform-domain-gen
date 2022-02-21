@@ -2,6 +2,44 @@ data "http" "outgoing_ip" {
   url = "https://ifconfig.me"
 }
 
+data "azurerm_storage_account" "iacsa" {
+  name                = var.dsc_sa
+  resource_group_name = var.dsc_sa_rg
+}
+
+data "azurerm_storage_account_sas" "iacsa_sas" {
+  connection_string = azurerm_storage_account.iacsa.primary_connection_string
+  https_only        = true
+  signed_version    = "2017-07-29"
+
+  resource_types {
+    service   = true
+    container = false
+    object    = false
+  }
+
+  services {
+    blob      = true
+    queue     = false
+    table     = false
+    file      = false
+  }
+
+  start  = timestamp()
+  expiry = timeadd(timestamp(), "2h")
+
+  permissions {
+    read    = true
+    write   = false
+    delete  = false
+    list    = false
+    add     = false
+    create  = false
+    update  = false
+    process = false
+  }
+}
+
 locals {
   # local public ip
   outgoing_ip = chomp(data.http.outgoing_ip.body)
