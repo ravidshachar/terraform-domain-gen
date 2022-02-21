@@ -159,7 +159,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
 
   protected_settings = <<PROTECTED
     {
-      "configurationUrlSasToken": ${data.azurerm_storage_account_sas.iacsa_sas.sas},
+      "configurationUrlSasToken": "${data.azurerm_storage_account_sas.iacsa_sas.sas}",
       "configurationArguments": {
         "AdminCreds": {
           "UserName": "${var.admin_username}",
