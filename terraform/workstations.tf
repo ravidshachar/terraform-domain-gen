@@ -63,45 +63,46 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   }
 }
 
-resource "null_resource" "init_jit_ws" {
-  for_each = var.prefix_to_domain_name
-  # let it run only after workstations are provisioned and the domain is ready
-  depends_on = [
-    azurerm_windows_virtual_machine.workstation,
-    null_resource.dc_playbook
-  ]
-
-  # init jit WinRM access for ansible
-  provisioner "local-exec" {
-    command = "bash ${local.repo_path}/init_jit_winrm.sh ${azurerm_resource_group.resource_group[each.key].name} ${each.key}-jit ${join(" ", formatlist("%s-ws%s", each.key, range(1, var.workstations_count + 1)))}"
-  }
-}
-
-resource "null_resource" "workstation_playbook" {
-
-  # let it run only after jit is initiated for ws
-  depends_on = [
-    azurerm_windows_virtual_machine.workstation,
-    null_resource.dc_playbook,
-    null_resource.init_jit_ws
-  ]
-
-  # sleep 10 to allow jit to initialize
-  provisioner "local-exec" {
-    command = "sleep 10"
-  }
-
-  provisioner "local-exec" {
-    command = "echo ${var.admin_password} > .secret"
-  }
-
-  # use a password from file so we can see the output properly
-  provisioner "local-exec" {
-    command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ${local.repo_path}/ansible/workstations_playbook.yml --inventory=${local.repo_path}/ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e '${local.prefix_to_domain_string}' -e '${local.domain_to_ips}'"
-  }
-
-  # delete secret file
-  provisioner "local-exec" {
-    command = "rm .secret"
-  }
-}
+#resource "null_resource" "init_jit_ws" {
+#  for_each = var.prefix_to_domain_name
+#  # let it run only after workstations are provisioned and the domain is ready
+#  depends_on = [
+#    azurerm_windows_virtual_machine.workstation,
+#    null_resource.dc_playbook
+#  ]
+#
+#  # init jit WinRM access for ansible
+#  provisioner "local-exec" {
+#    command = "bash ${local.repo_path}/init_jit_winrm.sh ${azurerm_resource_group.resource_group[each.key].name} ${each.key}-jit ${join(" ", formatlist("%s-ws%s", each.key, range(1, var.workstations_count + 1)))}"
+#  }
+#}
+#
+#resource "null_resource" "workstation_playbook" {
+#
+#  # let it run only after jit is initiated for ws
+#  depends_on = [
+#    azurerm_windows_virtual_machine.workstation,
+#    null_resource.dc_playbook,
+#    null_resource.init_jit_ws
+#  ]
+#
+#  # sleep 10 to allow jit to initialize
+#  provisioner "local-exec" {
+#    command = "sleep 10"
+#  }
+#
+#  provisioner "local-exec" {
+#    command = "echo ${var.admin_password} > .secret"
+#  }
+#
+#  # use a password from file so we can see the output properly
+#  provisioner "local-exec" {
+#    command = "ADMIN_PASSWORD=$(cat .secret); ansible-playbook ${local.repo_path}/ansible/workstations_playbook.yml --inventory=${local.repo_path}/ansible/inventory_azure_rm.yml --user=localadmin -e admin_username=${var.admin_username} -e ansible_winrm_password=$ADMIN_PASSWORD -e '${local.prefix_to_domain_string}' -e '${local.domain_to_ips}'"
+#  }
+#
+#  # delete secret file
+#  provisioner "local-exec" {
+#    command = "rm .secret"
+#  }
+#}
+#

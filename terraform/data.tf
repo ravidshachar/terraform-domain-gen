@@ -8,7 +8,7 @@ data "azurerm_storage_account" "iacsa" {
 }
 
 data "azurerm_storage_account_sas" "iacsa_sas" {
-  connection_string = azurerm_storage_account.iacsa.primary_connection_string
+  connection_string = data.azurerm_storage_account.iacsa.primary_connection_string
   https_only        = true
   signed_version    = "2017-07-29"
 

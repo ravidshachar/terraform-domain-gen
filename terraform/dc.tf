@@ -15,7 +15,7 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = [cidrsubnet(var.vnet_address_space, 8, index(keys(var.prefix_to_domain_name), each.key))]
   location            = azurerm_resource_group.resource_group[each.key].location
   resource_group_name = azurerm_resource_group.resource_group[each.key].name
-  dns_servers         = [azurerm_network_interface.dc_nic[each.key].private_ip_address]
+  dns_servers         = [cidrhost(cidrsubnet(var.vnet_address_space, 8, index(keys(var.prefix_to_domain_name), each.key)), 10)]
 }
 
 # main subnet 10.0.0.0/24
@@ -161,7 +161,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
   protected_settings = <<PROTECTED
     {
       "Items": {
-        "configurationUrlSasToken": ${azurerm_storage_account_sas.iacsa_sas.sas},
+        "configurationUrlSasToken": ${data.azurerm_storage_account_sas.iacsa_sas.sas},
         "AdminPassword": "${var.admin_password}"
       }
     }
