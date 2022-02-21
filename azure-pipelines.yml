@@ -49,6 +49,7 @@ steps:
      - script: |
         [[ $item.value ]] && echo '${{ item.key }}=${{ replace(convertToJson(item.value), ':', '=')}}' >> parameters.auto.tfvars
        displayName: "JsonVar ${{ item.key }}"
+       
 #- task: UsePythonVersion@0
 #  inputs:
 #    versionSpec: '3.8'
