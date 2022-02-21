@@ -1,0 +1,85 @@
+parameters:
+- name: prefix_to_domain_name
+  type: object
+  default:
+    ad-lab: test.lab
+- name: location
+  type: string
+  default: "West Europe"
+- name: dc_size
+  type: string
+  default: "Standard_A4_v2"
+- name: ws_size
+  type: string
+  default: "Standard_A2_v2"
+- name: ex_size
+  type: string
+  default: "Standard_A2m_v2"
+- name: vnet_address_space
+  type: string
+  default: "10.0.0.0/8"
+- name: admin_username
+  type: string
+  default: "domainadmin"
+- name: workstations_count
+  type: number
+  default: "1"
+- name: deploy_exchange
+  type: boolean
+  default: false
+- name: dsc_sa_rg
+  type: string
+  default: "IAC-RG"
+- name: dsc_sa
+  type: string
+  default: "iacsa"
+- name: dsc_sa_container
+  type: string
+  default: "dscscripts"
+
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+# This step maps parameters to tfvars, using .auto.tfvars removes the need to use -tf-vars argument
+- ${{ each item in parameters }}:
+     - script: |
+        [[ $item.value ]] && echo '${{ item.key }}=${{ replace(convertToJson(item.value), ':', '=')}}' >> parameters.auto.tfvars
+       displayName: "JsonVar ${{ item.key }}"
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.8'
+    addToPath: true
+    architecture: 'x64'
+
+- script: python -m pip install --upgrade pip wheel
+  displayName: 'Install tools'
+
+- script: pip install -r requirements.txt
+  displayName: 'Install requirements'
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+    backendServiceArm: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
+    backendAzureRmResourceGroupName: 'IAC-RG'
+    backendAzureRmStorageAccountName: 'iacsa'
+    backendAzureRmContainerName: 'terraform-state'
+    backendAzureRmKey: 'terraform.tfstate'
+  displayName: 'terraform init'
+
+- task: TerraformTaskV2@2
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+    commandOptions: '-auto-approve'
+    environmentServiceNameAzureRM: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
+  env:
+    TF_VAR_admin_password: $(admin_password)
+  displayName: 'terraform apply'
