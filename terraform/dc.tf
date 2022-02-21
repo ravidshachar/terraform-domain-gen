@@ -146,7 +146,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
 
   settings = <<SETTINGS
     {
-      "Modulesurl": "${format("https://%s.blob.core.windows.net/%s/%s%s", var.dsc_sa, var.dsc_archive_file, "PrivateSettingsRef:configurationUrlSasToken")}",
+      "Modulesurl": "${format("https://%s.blob.core.windows.net/%s/%s%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file, "PrivateSettingsRef:configurationUrlSasToken")}",
       "ConfigurationFunction": "deploy_ad.ps1\\ad_setup",
       "properties": {
         "DomainName": "${each.value}",
