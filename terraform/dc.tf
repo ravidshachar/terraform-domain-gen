@@ -150,7 +150,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
         "url": "${format("https://%s.blob.core.windows.net/%s/%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file)}",
         "script": "deploy-ADRole.ps1",
         "function": "ad_setup" 
-      }
+      },
       "configurationArguments": {
         "DomainName": "${each.value}"
       }
@@ -162,7 +162,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
       "configurationUrlSasToken": ${data.azurerm_storage_account_sas.iacsa_sas.sas},
       "configurationArguments": {
         "AdminCreds": {
-          "UserName": "${var.admin_username}"
+          "UserName": "${var.admin_username}",
           "Password": "${var.admin_password}"
         }
       }
