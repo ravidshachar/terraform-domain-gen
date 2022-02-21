@@ -49,17 +49,17 @@ steps:
      - script: |
         [[ $item.value ]] && echo '${{ item.key }}=${{ replace(convertToJson(item.value), ':', '=')}}' >> parameters.auto.tfvars
        displayName: "JsonVar ${{ item.key }}"
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.8'
-    addToPath: true
-    architecture: 'x64'
-
-- script: python -m pip install --upgrade pip wheel
-  displayName: 'Install tools'
-
-- script: pip install -r requirements.txt
-  displayName: 'Install requirements'
+#- task: UsePythonVersion@0
+#  inputs:
+#    versionSpec: '3.8'
+#    addToPath: true
+#    architecture: 'x64'
+#
+#- script: python -m pip install --upgrade pip wheel
+#  displayName: 'Install tools'
+#
+#- script: pip install -r requirements.txt
+#  displayName: 'Install requirements'
 
 - task: TerraformTaskV2@2
   inputs:
