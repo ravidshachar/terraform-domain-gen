@@ -139,7 +139,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
   for_each = var.prefix_to_domain_name
 
   name                 = "deploy_dc"
-  virtual_machine_id   = azurerm_windows_virtual_machine.dc[each.key]
+  virtual_machine_id   = azurerm_windows_virtual_machine.dc[each.key].id
   publisher            = "Microsoft.Powershell"
   type                 = "DSC"
   type_handler_version = "2.9"
