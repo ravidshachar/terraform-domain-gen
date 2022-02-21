@@ -88,3 +88,8 @@ variable "dsc_sa_container" {
   description = "The container containing the dsc scripts"
 }
 
+variable "dsc_archive_file" {
+  type        = string
+  default     = "deploy_ad.zip"
+  description = "The published dsc archive file"
+}
