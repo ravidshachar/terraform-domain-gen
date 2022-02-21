@@ -36,6 +36,9 @@ parameters:
 - name: dsc_sa_container
   type: string
   default: "dscscripts"
+- name: dsc_archive_file
+  type: string
+  default: "deploy-ADRole.zip"
 
 trigger:
 - master
