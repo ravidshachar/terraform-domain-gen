@@ -15,7 +15,7 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = [cidrsubnet(var.vnet_address_space, 8, index(keys(var.prefix_to_domain_name), each.key))]
   location            = azurerm_resource_group.resource_group[each.key].location
   resource_group_name = azurerm_resource_group.resource_group[each.key].name
-  dns_servers         = [cidrhost(cidrsubnet(var.vnet_address_space, 8, index(keys(var.prefix_to_domain_name), each.key)), 10)]
+  dns_servers         = [cidrhost(cidrsubnet(var.vnet_address_space, 8, index(keys(var.prefix_to_domain_name), each.key)), 10), "8.8.8.8"]
 }
 
 # main subnet 10.0.0.0/24
@@ -142,7 +142,7 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
   virtual_machine_id   = azurerm_windows_virtual_machine.dc[each.key].id
   publisher            = "Microsoft.Powershell"
   type                 = "DSC"
-  type_handler_version = "2.9"
+  type_handler_version = "2.77"
 
   settings = <<SETTINGS
     {
@@ -157,9 +157,10 @@ resource "azurerm_virtual_machine_extension" "deploy_dc" {
     }
   SETTINGS
 
+  # "configurationUrlSasToken": "${data.azurerm_storage_account_sas.iacsa_sas.sas}",
+
   protected_settings = <<PROTECTED
     {
-      "configurationUrlSasToken": "${data.azurerm_storage_account_sas.iacsa_sas.sas}",
       "configurationArguments": {
         "AdminCreds": {
           "UserName": "${var.admin_username}",

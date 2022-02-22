@@ -63,6 +63,46 @@ resource "azurerm_windows_virtual_machine" "workstation" {
   }
 }
 
+resource "azurerm_virtual_machine_extension" "join_domain" {
+  for_each = { for combo in local.workstations_set : "${combo.name_prefix}.${combo.index}" => combo }
+
+  depends_on = [
+    azurerm_virtual_machine_extension.deploy_dc
+  ]
+
+  name                 = "join_domain"
+  virtual_machine_id   = azurerm_windows_virtual_machine.workstation[each.key].id
+  publisher            = "Microsoft.Powershell"
+  type                 = "DSC"
+  type_handler_version = "2.77"
+
+  settings = <<SETTINGS
+    {
+      "configuration": {
+        "url": "${format("https://%s.blob.core.windows.net/%s/%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file)}",
+        "script": "deploy-ADRole.ps1",
+        "function": "DomainJoin" 
+      },
+      "configurationArguments": {
+        "DomainName": "${var.prefix_to_domain_name[each.value.name_prefix]}"
+      }
+    }
+  SETTINGS
+
+  # "configurationUrlSasToken": "${data.azurerm_storage_account_sas.iacsa_sas.sas}",
+
+  protected_settings = <<PROTECTED
+    {
+      "configurationArguments": {
+        "AdminCreds": {
+          "UserName": "${var.prefix_to_domain_name[each.value.name_prefix]}\\${var.admin_username}",
+          "Password": "${var.admin_password}"
+        }
+      }
+    }
+  PROTECTED
+}
+
 #resource "null_resource" "init_jit_ws" {
 #  for_each = var.prefix_to_domain_name
 #  # let it run only after workstations are provisioned and the domain is ready
