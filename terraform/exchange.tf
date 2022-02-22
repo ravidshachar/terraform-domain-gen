@@ -61,6 +61,42 @@ resource "azurerm_windows_virtual_machine" "exchange" {
   }
 }
 
+resource "azurerm_virtual_machine_extension" "deploy_ex" {
+  for_each = local.exchange_set
+
+  name                 = "deploy_ex"
+  virtual_machine_id   = azurerm_windows_virtual_machine.exchange[each.key].id
+  publisher            = "Microsoft.Powershell"
+  type                 = "DSC"
+  type_handler_version = "2.77"
+
+  settings = <<SETTINGS
+    {
+      "configuration": {
+        "url": "${format("https://%s.blob.core.windows.net/%s/%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file)}",
+        "script": "deploy_ex.ps1",
+        "function": "install_exchange" 
+      },
+      "configurationArguments": {
+        "DomainName": "${each.value}"
+      }
+    }
+  SETTINGS
+
+  # "configurationUrlSasToken": "${data.azurerm_storage_account_sas.iacsa_sas.sas}",
+
+  protected_settings = <<PROTECTED
+    {
+      "configurationArguments": {
+        "AdminCreds": {
+          "UserName": "${var.admin_username}",
+          "Password": "${var.admin_password}"
+        }
+      }
+    }
+  PROTECTED
+}
+
 #resource "null_resource" "init_jit_ex" {
 #  for_each = local.exchange_set
 #  # let it run only after exchange servers are provisioned and the domain is ready

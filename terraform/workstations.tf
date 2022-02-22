@@ -80,7 +80,7 @@ resource "azurerm_virtual_machine_extension" "join_domain" {
     {
       "configuration": {
         "url": "${format("https://%s.blob.core.windows.net/%s/%s", var.dsc_sa, var.dsc_sa_container, var.dsc_archive_file)}",
-        "script": "deploy-ADRole.ps1",
+        "script": "deploy_ad.ps1",
         "function": "DomainJoin" 
       },
       "configurationArguments": {
