@@ -46,6 +46,7 @@ steps:
       Install-Module ActiveDirectoryDsc -Confirm:$false -Force
       Install-Module xExchange -Confirm:$false -Force
       Install-Module cChoco -Confirm:$false -Force
+      Install-Module AdfsDsc -Confirm:$false -Force
       
       foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"} | foreach-object {$_.Split(".")[0]})) {
         Write-Host $file
