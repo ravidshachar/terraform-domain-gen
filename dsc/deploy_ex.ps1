@@ -90,7 +90,7 @@ Configuration install_exchange {
                 Invoke-WebRequest -Uri "https://download.microsoft.com/download/5/3/e/53e75dbd-ca33-496a-bd23-1d861feaa02a/ExchangeServer2019-x64-CU11.ISO" -OutFile "c:\exchange.iso"
                 $mountResult = Mount-DiskImage c:\exchange.iso -PassThru
                 $driveLetter = ($mountResult | Get-Volume).DriveLetter
-                Copy-Item -Path "$driveLetter:\*" -Destination "C:\Exch\" -Recurse
+                Copy-Item -Path "${driveLetter}:\*" -Destination "C:\Exch\" -Recurse
             }
 
             TestScript = 
