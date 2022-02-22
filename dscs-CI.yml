@@ -22,7 +22,7 @@ trigger:
     - dsc
   paths:
     include:
-    - dscs/deploy_ad.ps1
+    - dscs/*
 
 
 pool:
