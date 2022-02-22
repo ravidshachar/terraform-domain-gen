@@ -47,7 +47,7 @@ steps:
       Install-Module xExchange -Confirm:$false -Force
       Install-Module cChoco -Confirm:$false -Force
       
-      foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"}).split(".")[0]) {
+      foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"} | foreach-object {$_.Split(".")[0]})) {
         Write-Host $file
         
         # Creating the ZIP file for the DSC Configuration
