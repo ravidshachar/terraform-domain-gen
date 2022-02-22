@@ -3,6 +3,14 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+parameters:
+- name: 'storageAccountName'
+  type: string
+- name: 'resourceGroupName'
+  type: string
+- name: 'containerName'
+  type: string
+
 
 trigger:
   branches:
@@ -23,19 +31,21 @@ steps:
     azurePowerShellVersion: LatestVersion
     ScriptType: InlineScript
     Inline: |
+      $storageAccountName = '${{ parameters.storageAccountName }}'
+      $resourceGroupName = '${{ parameters.resourceGroupName }}'
+      $StorageAccount = Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $resourceGroupName
+      $Container = $StorageAccount | Get-AzStorageContainer -name '${{ parameters.containerName }}'
+
       Install-Module xActiveDirectory -Confirm:$false -Force
       Install-Module xPendingReboot -Confirm:$false -Force
       Install-Module xNetworking -Confirm:$false -Force
       Install-Module xComputerManagement -Confirm:$false -Force
-      
-      # Creating the ZIP file for the DSC Configuration
-      Publish-AzVMDscConfiguration "dscs/deploy_ad.ps1" -OutputArchivePath  "dscs/deploy_ad.zip" -force
-      $storageAccountName = 'iacsa'
-      $resourceGroupName = 'IAC-RG'
-      $dscZipFilePath = "dscs/deploy_ad.zip"
 
-      $StorageAccount = Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $resourceGroupName
-      $Container = $StorageAccount | Get-AzStorageContainer -name dscscripts
+      foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"}).split(".")[0]) {
+        # Creating the ZIP file for the DSC Configuration
+        Publish-AzVMDscConfiguration "dscs/$file.ps1" -OutputArchivePath  "dscs/$file.zip" -force
+        $dscZipFilePath = "dscs/$file.zip"
 
-      # Upload single file
-      $Container | Set-AzStorageBlobContent -File $dscZipFilePath -Force
+        # Upload single file
+        $Container | Set-AzStorageBlobContent -File $dscZipFilePath -Force
+      }
