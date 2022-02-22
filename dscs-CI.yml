@@ -46,8 +46,8 @@ steps:
       
       foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"}).split(".")[0]) {
         # Creating the ZIP file for the DSC Configuration
-        Publish-AzVMDscConfiguration "dscs/$file.ps1" -OutputArchivePath  "dscs/$file.zip" -force
-        $dscZipFilePath = "dscs/$file.zip"
+        Publish-AzVMDscConfiguration "dsc/$file.ps1" -OutputArchivePath  "dsc/$file.zip" -force
+        $dscZipFilePath = "dsc/$file.zip"
       
         # Upload single file
         $Container | Set-AzStorageBlobContent -File $dscZipFilePath -Force
