@@ -7,9 +7,9 @@ Configuration install_adfs {
         [System.Management.Automation.PSCredential]$Admincreds,
 
         [Parameter(Mandatory)]
-        [String]$FSName
+        [String]$FSName,
 
-        $netbios = $DomainName.split(".")[0]
+        $netbios = $DomainName.split(".")[0],
 
         $CertificateThumbprint = ""
     )
