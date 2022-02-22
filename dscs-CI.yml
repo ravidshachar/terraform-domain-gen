@@ -22,7 +22,7 @@ trigger:
     - dsc
   paths:
     include:
-    - dscs/*
+    - dsc/*
 
 
 pool:
@@ -48,6 +48,8 @@ steps:
       Install-Module cChoco -Confirm:$false -Force
       
       foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"}).split(".")[0]) {
+        Write-Host $file
+        
         # Creating the ZIP file for the DSC Configuration
         Publish-AzVMDscConfiguration "dsc/$file.ps1" -OutputArchivePath  "dsc/$file.zip" -force
         $dscZipFilePath = "dsc/$file.zip"
