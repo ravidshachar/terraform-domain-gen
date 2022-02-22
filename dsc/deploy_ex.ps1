@@ -96,8 +96,7 @@ Configuration install_exchange {
 
             TestScript = 
             {
-                $Status = ('True' -in (Test-Path c:\Exch))
-                $Status -eq $True
+                return $false
             }
         }
 

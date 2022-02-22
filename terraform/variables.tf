@@ -33,6 +33,12 @@ variable "ws_size" {
   description = "Size for workstations"
 }
 
+variable "adfs_size" {
+  type        = string
+  default     = "Standard_A2_v2"
+  description = "Size for adfs"
+}
+
 variable "vnet_address_space" {
   type        = string
   default     = "10.0.0.0/8"
@@ -68,6 +74,12 @@ variable "deploy_exchange" {
   type        = bool
   default     = false
   description = "Set to true if you want to deploy exchange servers"
+}
+
+variable "deploy_adfs" {
+  type        = bool
+  default     = false
+  description = "Set to true if you want to deploy adfs and web servers"
 }
 
 variable "dsc_sa_rg" {

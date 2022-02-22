@@ -64,6 +64,10 @@ resource "azurerm_windows_virtual_machine" "exchange" {
 resource "azurerm_virtual_machine_extension" "deploy_ex" {
   for_each = local.exchange_set
 
+  depends_on = [
+    azurerm_virtual_machine_extension.deploy_dc
+  ]
+
   name                 = "deploy_ex"
   virtual_machine_id   = azurerm_windows_virtual_machine.exchange[each.key].id
   publisher            = "Microsoft.Powershell"
