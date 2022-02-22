@@ -1,0 +1,41 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - dscs/deploy_ad.ps1
+
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- task: AzurePowerShell@5
+  inputs:
+    azureSubscription: IAC-SC
+    azurePowerShellVersion: LatestVersion
+    ScriptType: InlineScript
+    Inline: |
+      Install-Module xActiveDirectory -Confirm:$false -Force
+      Install-Module xPendingReboot -Confirm:$false -Force
+      Install-Module xNetworking -Confirm:$false -Force
+      Install-Module xComputerManagement -Confirm:$false -Force
+      
+      # Creating the ZIP file for the DSC Configuration
+      Publish-AzVMDscConfiguration "dscs/deploy_ad.ps1" -OutputArchivePath  "dscs/deploy_ad.zip" -force
+      $storageAccountName = 'iacsa'
+      $resourceGroupName = 'IAC-RG'
+      $dscZipFilePath = "dscs/deploy_ad.zip"
+
+      $StorageAccount = Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $resourceGroupName
+      $Container = $StorageAccount | Get-AzStorageContainer -name dscscripts
+
+      # Upload single file
+      $Container | Set-AzStorageBlobContent -File $dscZipFilePath -Force
