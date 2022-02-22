@@ -6,10 +6,13 @@
 parameters:
 - name: 'storageAccountName'
   type: string
+  default: iacsa
 - name: 'resourceGroupName'
   type: string
+  default: IAC-RG
 - name: 'containerName'
   type: string
+  default: dscscripts
 
 
 trigger:
