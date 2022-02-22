@@ -31,25 +31,25 @@ pool:
 steps:
 - task: AzurePowerShell@5
   inputs:
-    azureSubscription: IAC-SC
-    azurePowerShellVersion: LatestVersion
-    ScriptType: InlineScript
+    azureSubscription: 'Green-Peas-ms440-DE-001(9135e0b2-cfff-4136-bbbf-9c7428c2ba41)'
+    ScriptType: 'InlineScript'
     Inline: |
       $storageAccountName = '${{ parameters.storageAccountName }}'
       $resourceGroupName = '${{ parameters.resourceGroupName }}'
       $StorageAccount = Get-AzStorageAccount -Name $storageAccountName -ResourceGroupName $resourceGroupName
       $Container = $StorageAccount | Get-AzStorageContainer -name '${{ parameters.containerName }}'
-
+      
       Install-Module xActiveDirectory -Confirm:$false -Force
       Install-Module xPendingReboot -Confirm:$false -Force
       Install-Module xNetworking -Confirm:$false -Force
       Install-Module xComputerManagement -Confirm:$false -Force
-
+      
       foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"}).split(".")[0]) {
         # Creating the ZIP file for the DSC Configuration
         Publish-AzVMDscConfiguration "dscs/$file.ps1" -OutputArchivePath  "dscs/$file.zip" -force
         $dscZipFilePath = "dscs/$file.zip"
-
+      
         # Upload single file
         $Container | Set-AzStorageBlobContent -File $dscZipFilePath -Force
       }
+    azurePowerShellVersion: 'LatestVersion'
