@@ -11,6 +11,7 @@ Configuration install_exchange {
 
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DSCResource -ModuleName xComputerManagement
+    Import-DSCResource -ModuleName xPendingReboot
     Import-DscResource -ModuleName xExchange
     Import-DscResource -ModuleName cChoco
 
