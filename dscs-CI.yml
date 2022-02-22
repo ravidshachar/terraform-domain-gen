@@ -19,6 +19,7 @@ trigger:
   branches:
     include:
     - master
+    - dsc
   paths:
     include:
     - dscs/deploy_ad.ps1
