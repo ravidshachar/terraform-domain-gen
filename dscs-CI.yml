@@ -43,6 +43,9 @@ steps:
       Install-Module xPendingReboot -Confirm:$false -Force
       Install-Module xNetworking -Confirm:$false -Force
       Install-Module xComputerManagement -Confirm:$false -Force
+      Install-Module ActiveDirectoryDsc -Confirm:$false -Force
+      Install-Module xExchange -Confirm:$false -Force
+      Install-Module cChoco -Confirm:$false -Force
       
       foreach ($file in $(((Get-ChildItem dsc).Name) | Where {$_ -like "*.ps1"}).split(".")[0]) {
         # Creating the ZIP file for the DSC Configuration
